@@ -24,35 +24,39 @@ def main():
                     continue
 
                 # Filter on signal coverage
-                #TODO: move this filter to annot script
                 if "INV" in entry[3] and signal_cov(entry[3]) < float(MIN_COV):
                     continue
                 
                 entries.append(entry)
 
-    # Filter INV entries
-    i = 1
-    while i < len(entries):
+    #==========================================#
+    # FILTER ON NESTED BUBBLES WAS DEACTIVATED #
+    #==========================================#
 
-        prev = entries[i-1]
-        current = entries[i]
+    # # Filter INV entries
+    # i = 1
+    # while i < len(entries):
 
-        if i == 0:
-            i += 1
+    #     prev = entries[i-1]
+    #     current = entries[i]
 
-        elif is_nested(prev, current):
+    #     if i == 0:
+    #         i += 1
 
-            to_remove = i - lowest_cov_entry(prev, current)
+    #     elif is_nested(prev, current):
 
-            # Remove entry with lowest signal coverage
-            del entries[to_remove]
+    #         to_remove = i - lowest_cov_entry(prev, current)
 
-            # Update i
-            i -= 1
+    #         # Remove entry with lowest signal coverage
+    #         del entries[to_remove]
+
+    #         # Update i
+    #         i -= 1
         
-        else:
+    #     else:
 
-            i += 1
+    #         i += 1
+    #==========================================#
 
     # Output filtered entries
     for e in entries:
