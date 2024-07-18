@@ -4,7 +4,9 @@ import sys
 import subprocess
 import re
 
-inVCF, inGFA, inPREF, threads = sys.argv[1:]
+inVCF, inGFA, inPREF, threads, MINCOV = sys.argv[1:]
+
+MINCOV = float(MINCOV)
 
 tmpDir = f"tmp_{inPREF}"
 outName = f"{inPREF}.annot.tsv"
@@ -52,9 +54,6 @@ def is_INV_fromPath(a0_path, a1_path):
         if -i in a1_path:
             is_patternFound = True
             inverted_nodes.append(i)
-    
-    # if is_patternFound:
-    #     print(inverted_nodes)
 
     return is_patternFound, inverted_nodes
 
@@ -154,14 +153,11 @@ with open(inVCF, "r") as file:
         # For potential alignment
         a0Fasta = f"{tmpDir}/{chrom}.{pos}.a0.fa"
         write_fasta(a0Fasta, "a0", a0Seq)
-        # subprocess.run(f"echo '>a0' > {a0Fasta}", shell=True)
-        # subprocess.run(f"echo {a0Seq} >> {a0Fasta}", shell=True)
 
         #---------------------------------------------------
         # Check if alleles present INV pattern
         #---------------------------------------------------
         a0Path = parse_path(aPaths[0])
-        # a1Paths = aPaths[1:]
 
         # Get balanced a1
         f_INFO = line.split("\t")[7]
@@ -181,6 +177,7 @@ with open(inVCF, "r") as file:
             a1Path = parse_path(aPaths[i])
 
             is_inv_fromPath, rev_nodes = is_INV_fromPath(a0Path, a1Path)
+            path_coverage = 0
 
             if is_inv_fromPath:
                 
@@ -188,43 +185,52 @@ with open(inVCF, "r") as file:
                 for n in rev_nodes:
                     len_rev += get_len_node(d_nodes, n)
                 
-                are_INV[i-1] = (True, "path", ",".join([str(round(len_rev/len(a0Seq), 2)), str(len(rev_nodes))]), str(len(a1Path)-2-len(rev_nodes)))
-
-                # print(chrom, pos, i)
+                path_coverage = round(len_rev/len(a0Seq), 2)
 
             #-----------------------------------------------
             # Check for pattern in alignment
             #-----------------------------------------------
-            else:
+            a1Seq = a1Seqs[i-1]
 
-                a1Seq = a1Seqs[i-1]
+            a1Fasta = f"{tmpDir}/{chrom}.{pos}.a{str(i+1)}.fa"
+            write_fasta(a1Fasta, "a1", a1Seq)
 
-                a1Fasta = f"{tmpDir}/{chrom}.{pos}.a{str(i+1)}.fa"
-                write_fasta(a1Fasta, "a1", a1Seq)
-                # subprocess.run(f"echo '>a1' > {a1Fasta}", shell=True)
-                # subprocess.run(f"echo {a1Seq} >> {a1Fasta}", shell=True)
+            # Run minimap2
+            alnPAF = f"{tmpDir}/{chrom}.{pos}.a{str(i+1)}.paf"
+            c_minimap2 = f"minimap2 -cx asm20 --cs -r2k -t {threads} {a0Fasta} {a1Fasta} > {alnPAF} "
+            subprocess.run(c_minimap2, shell=True)
 
-                # Run minimap2
-                alnPAF = f"{tmpDir}/{chrom}.{pos}.a{str(i+1)}.paf"
-                c_minimap2 = f"minimap2 -cx asm20 --cs -r2k -t {threads} {a0Fasta} {a1Fasta} > {alnPAF} "
-                subprocess.run(c_minimap2, shell=True)
+            is_inv_fromAln, frac_rev, n_rev_aln, frac_for, n_for_aln = is_INV_fromAln(alnPAF)
+            aln_coverage = 0
 
-                is_inv_fromAln, frac_rev, n_rev_aln, frac_for, n_for_aln = is_INV_fromAln(alnPAF)
+            if is_inv_fromAln:
+                aln_coverage = round(frac_rev, 2)
+            
+            #-----------------------------------------------
+            # Report best signal
+            #-----------------------------------------------
+            if is_inv_fromPath and is_inv_fromAln:
 
-                if is_inv_fromAln:
-                    are_INV[i-1] = (True, "aln", ",".join([str(round(frac_rev, 2)), str(n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
-
-                    # Delete paf file
-                    subprocess.run(f"rm {alnPAF}", shell=True)
+                if path_coverage >= aln_coverage:
+                    are_INV[i-1] = (True, "path", ",".join([str(round(len_rev/len(a0Seq), 2)), str(len(rev_nodes))]), str(len(a1Path)-2-len(rev_nodes)))
+                
+                elif path_coverage >= MINCOV:
+                    are_INV[i-1] = (True, "mixed", ",".join([str(round(frac_rev, 2)), str(n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
                 
                 else:
-                    are_INV[i-1] = (False, ".")
+                    are_INV[i-1] = (True, "aln", ",".join([str(round(frac_rev, 2)), str(n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
 
-                    # Delete paf file
-                    subprocess.run(f"rm {alnPAF}", shell=True)
+            elif is_inv_fromPath:
+                are_INV[i-1] = (True, "path", ",".join([str(round(len_rev/len(a0Seq), 2)), str(len(rev_nodes))]), str(len(a1Path)-2-len(rev_nodes)))
+            
+            elif is_inv_fromAln:
+                are_INV[i-1] = (True, "aln", ",".join([str(round(frac_rev, 2)), str(n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
 
-            # else:
-            #     are_INV[i] = (False, ".")     
+            else:
+                are_INV[i-1] = (False, ".")
+
+            # Delete paf file
+            subprocess.run(f"rm {alnPAF}", shell=True)   
 
         for i in range(len(are_INV)):
 
@@ -232,8 +238,9 @@ with open(inVCF, "r") as file:
                 are_INV[i] = (False, ".")
 
         #---------------------------------------------------
-        # Output results
+        # Output full version of annotations
         #---------------------------------------------------
+
         out.write("\t".join([
             chrom, pos, bubble,
             str(len(a0Seq)),
