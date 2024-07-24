@@ -9,7 +9,7 @@ inVCF, inGFA, inPREF, threads, MINCOV = sys.argv[1:]
 MINCOV = float(MINCOV)
 
 tmpDir = f"tmp_{inPREF}"
-outName = f"{inPREF}.annot.tsv"
+outName = f"{inPREF}.annot.bed"
 
 #===========================================================
 # FUNCTIONS
@@ -241,12 +241,20 @@ with open(inVCF, "r") as file:
         # Output full version of annotations
         #---------------------------------------------------
 
-        out.write("\t".join([
-            chrom, pos, bubble,
-            str(len(a0Seq)),
-            ",".join([str(len(a1)) for a1 in a1Seqs]),
-            ";".join(["INV:" + ":".join(b[1:]) if b[0] else "DIV" for b in are_INV])
-        ]) + "\n")
+        # out.write("\t".join([
+        #     chrom, pos, bubble,
+        #     str(len(a0Seq)),
+        #     ",".join([str(len(a1)) for a1 in a1Seqs]),
+        #     ";".join(["INV:" + ":".join(b[1:]) if b[0] else "DIV" for b in are_INV])
+        # ]) + "\n")
+
+        if any([b[0] for b in are_INV]):
+
+            out.write("\t".join([
+                chrom, pos,
+                str(int(pos) + len(a0Seq) - 1),
+                ";".join(["INV:" + ":".join(b[1:]) if b[0] else "DIV" for b in are_INV])
+            ]) + "\n")
 
         #---------------------------------------------------
         # Clean tmp fasta files
