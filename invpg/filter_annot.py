@@ -1,5 +1,6 @@
 #! /bin/python3
 from typing import Any
+from os import path
 
 
 def read_input(
@@ -189,60 +190,55 @@ def filterannot_main(
     minimum_coverage : float
         _description_
     """
-    entries: list[Any] = list()
-
     # Read input entries and save INV entries
-    with open(input_annotation_file, "r", encoding='utf-8') as file:
-        for line in file:
-            if is_inv(line):
+    with open(f"{path.splitext(input_annotation_file)[0]}.filtered.bed", "w", encoding='utf-8') as output_file:
+        with open(input_annotation_file, "r", encoding='utf-8') as input_file:
+            for line in input_file:
+                if is_inv(line):
 
-                entry: list[str | int] = read_input(line)
+                    entry: list[str | int] = read_input(line)
 
-                entry[3] = best_inv_annot(entry[3])
+                    entry[3] = best_inv_annot(entry[3])
 
-                if "na" in entry[3]:
-                    continue
+                    if "na" in entry[3]:
+                        continue
 
-                # Filter on signal coverage
-                if "INV" in entry[3] and signal_cov(entry[3]) < float(minimum_coverage):
-                    continue
+                    # Filter on signal coverage
+                    if "INV" in entry[3] and signal_cov(entry[3]) < float(minimum_coverage):
+                        continue
 
-                entries.append(entry)
+                    output_file.write(
+                        format_entry(
+                            entry=entry,
+                            reference_name=reference_name
+                        )
+                    )
 
-    # ==========================================#
-    # FILTER ON NESTED BUBBLES WAS DEACTIVATED #
-    # ==========================================#
+        # ==========================================#
+        # FILTER ON NESTED BUBBLES WAS DEACTIVATED #
+        # ==========================================#
 
-    # # Filter INV entries
-    # i = 1
-    # while i < len(entries):
+        # # Filter INV entries
+        # i = 1
+        # while i < len(entries):
 
-    #     prev = entries[i-1]
-    #     current = entries[i]
+        #     prev = entries[i-1]
+        #     current = entries[i]
 
-    #     if i == 0:
-    #         i += 1
+        #     if i == 0:
+        #         i += 1
 
-    #     elif is_nested(prev, current):
+        #     elif is_nested(prev, current):
 
-    #         to_remove = i - lowest_cov_entry(prev, current)
+        #         to_remove = i - lowest_cov_entry(prev, current)
 
-    #         # Remove entry with lowest signal coverage
-    #         del entries[to_remove]
+        #         # Remove entry with lowest signal coverage
+        #         del entries[to_remove]
 
-    #         # Update i
-    #         i -= 1
+        #         # Update i
+        #         i -= 1
 
-    #     else:
+        #     else:
 
-    #         i += 1
-    # ==========================================#
-
-    # Output filtered entries
-    for e in entries:
-        print(
-            format_entry(
-                entry=e,
-                reference_name=reference_name
-            )
-        )
+        #         i += 1
+        # ==========================================#
