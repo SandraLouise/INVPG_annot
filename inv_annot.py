@@ -54,6 +54,15 @@ def is_INV_fromPath(a0_path, a1_path):
         if -i in a1_path:
             is_patternFound = True
             inverted_nodes.append(i)
+    
+    #-------------------------------------------------------
+    # IDEA: better check of INV pattern
+    #
+    # 1) Save positions of i and -i in a0 and a1 paths
+    # 2) Check that:
+    #    if pos(i1) < pos(i2) in a0:
+    #       pos(-i1) > pos(-i2) in a1
+    #-------------------------------------------------------
 
     return is_patternFound, inverted_nodes
 
@@ -186,48 +195,36 @@ with open(inVCF, "r") as file:
                     len_rev += get_len_node(d_nodes, n)
                 
                 path_coverage = round(len_rev/len(a0Seq), 2)
-
-            #-----------------------------------------------
-            # Check for pattern in alignment
-            #-----------------------------------------------
-            a1Seq = a1Seqs[i-1]
-
-            a1Fasta = f"{tmpDir}/{chrom}.{pos}.a{str(i+1)}.fa"
-            write_fasta(a1Fasta, "a1", a1Seq)
-
-            # Run minimap2
-            alnPAF = f"{tmpDir}/{chrom}.{pos}.a{str(i+1)}.paf"
-            c_minimap2 = f"minimap2 -cx asm20 --cs -r2k -t {threads} {a0Fasta} {a1Fasta} > {alnPAF} "
-            subprocess.run(c_minimap2, shell=True)
-
-            is_inv_fromAln, frac_rev, n_rev_aln, frac_for, n_for_aln = is_INV_fromAln(alnPAF)
-            aln_coverage = 0
-
-            if is_inv_fromAln:
-                aln_coverage = round(frac_rev, 2)
             
-            #-----------------------------------------------
-            # Report best signal
-            #-----------------------------------------------
-            if is_inv_fromPath and is_inv_fromAln:
+            if path_coverage >= MINCOV:
+                are_INV[i-1] = (True, "path", ",".join([str(path_coverage), str(len(rev_nodes))]), str(len(a1Path)-2-len(rev_nodes)))
+            
+            else:
 
-                if path_coverage >= aln_coverage:
-                    are_INV[i-1] = (True, "path", ",".join([str(round(len_rev/len(a0Seq), 2)), str(len(rev_nodes))]), str(len(a1Path)-2-len(rev_nodes)))
+                #-----------------------------------------------
+                # Check for pattern in alignment
+                #-----------------------------------------------
+                a1Seq = a1Seqs[i-1]
+
+                a1Fasta = f"{tmpDir}/{chrom}.{pos}.a{str(i+1)}.fa"
+                write_fasta(a1Fasta, "a1", a1Seq)
+
+                # Run minimap2
+                alnPAF = f"{tmpDir}/{chrom}.{pos}.a{str(i+1)}.paf"
+                c_minimap2 = f"minimap2 -cx asm20 --cs -r2k -t {threads} {a0Fasta} {a1Fasta} > {alnPAF} "
+                subprocess.run(c_minimap2, shell=True)
+
+                is_inv_fromAln, frac_rev, n_rev_aln, frac_for, n_for_aln = is_INV_fromAln(alnPAF)
+                aln_coverage = 0
+
+                if is_inv_fromAln:
+                    aln_coverage = round(frac_rev, 2)
                 
-                elif path_coverage >= MINCOV:
-                    are_INV[i-1] = (True, "mixed", ",".join([str(round(frac_rev, 2)), str(n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
+                if aln_coverage >= MINCOV:
+                    are_INV[i-1] = (True, "aln", ",".join([str(aln_coverage), str(n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
                 
                 else:
-                    are_INV[i-1] = (True, "aln", ",".join([str(round(frac_rev, 2)), str(n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
-
-            elif is_inv_fromPath:
-                are_INV[i-1] = (True, "path", ",".join([str(round(len_rev/len(a0Seq), 2)), str(len(rev_nodes))]), str(len(a1Path)-2-len(rev_nodes)))
-            
-            elif is_inv_fromAln:
-                are_INV[i-1] = (True, "aln", ",".join([str(round(frac_rev, 2)), str(n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
-
-            else:
-                are_INV[i-1] = (False, ".")
+                    are_INV[i-1] = (False, ".")
 
             # Delete paf file
             subprocess.run(f"rm {alnPAF}", shell=True)   
@@ -236,17 +233,6 @@ with open(inVCF, "r") as file:
 
             if are_INV[i] == None:
                 are_INV[i] = (False, ".")
-
-        #---------------------------------------------------
-        # Output full version of annotations
-        #---------------------------------------------------
-
-        # out.write("\t".join([
-        #     chrom, pos, bubble,
-        #     str(len(a0Seq)),
-        #     ",".join([str(len(a1)) for a1 in a1Seqs]),
-        #     ";".join(["INV:" + ":".join(b[1:]) if b[0] else "DIV" for b in are_INV])
-        # ]) + "\n")
 
         if any([b[0] for b in are_INV]):
 
