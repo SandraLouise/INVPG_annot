@@ -30,11 +30,12 @@ Output:
 Annotates the bubbles as "INV:path" or "INV:aln".
 
 ```bash
-python inv_annot.py <balancedVCF> <GFA> <outPrefix> <threads>
+python inv_annot.py <balancedVCF> <GFA> <outPrefix> <threads> <mincov>
 ```
 
 - `outPrefix`  Prefix of the output files.
 - `threads`  Number of threads to use for the sequence alignment (minimap2).
+- `mincov`  Minimum coverage fraction of inversion signal in bubbles.
 
 Output:
 - `outPrefix`.annot.tsv  A TSV (tabular separated) file with INV annotated bubbles, one bubble per line.
@@ -48,3 +49,16 @@ python rescue_1node_inv.py <GFA> gfa <refPath>
 ```
 
 - `refPath`  ID of the reference path in the graph (same one as used by `vg deconstruct`).
+
+### 4. Filtering annotated bubbles based on inversion-signal coverage
+
+```bash
+python filter_annot.py <annot.tsv> <refID> <mincov> > <annot.bed>
+```
+
+- `annot.tsv`  Output file of Step 2.
+- `refID` Name of reference sequence to be output (in case it was modified in the graph path ID).
+- `mincov`  Minimum coverage fraction of inversion signal in bubbles (same as used in Step 2).
+
+Output:
+- `annot.bed`  Annotated bubbles passing the `mincov` filter, output in BED format.
