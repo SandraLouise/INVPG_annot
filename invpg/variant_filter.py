@@ -22,12 +22,13 @@ def parse_vcf_line(line: str) -> dict[str, Any]:
     """
 
     tab_parsed: list[str] = line.rstrip().split("\t")
+    ref: str = tab_parsed[3]
+    alt: str = tab_parsed[4]
 
     if "," in tab_parsed[4]:
         alt: list[str] = alt.split(",")
     else:
         alt: list[str] = [alt]
-    ref: str = tab_parsed[3]
 
     return {
         "ref_id": tab_parsed[0],

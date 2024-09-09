@@ -308,19 +308,8 @@ def search_bed(in_bed):
 # in_file, file_format, REF_PATH = sys.argv[1:]
 def rescue_main(
     in_file: str,
-    file_format: str,
-    reference_path: str,
 ):
-    if file_format == "gfa":
-        # print("Searching GFA file...")
-        search_gfa(
-            in_gfa=in_file,
-            ref_path=reference_path,
-        )
-
-    # elif file_format == "bed":
-    #     print("Searching BED file...")
-    #     search_bed(in_file)
+    search_bed(in_file)
 
 # ===============================================================================
 # MAIN

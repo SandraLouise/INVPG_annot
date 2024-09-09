@@ -145,11 +145,14 @@ def get_len_node(
 # MAIN
 # ===========================================================
 
+# TODO: manque min_coverage
+
 
 def invannot_main(
     gfa_file: str,
     vcf_file: str,
     temp_folder: str,
+    mincov: float,
     threads: int,
 ) -> str:
     """_summary_
@@ -234,17 +237,19 @@ def invannot_main(
 
                     is_inv_fromPath, rev_nodes = is_INV_fromPath(
                         a0Path, a1Path)
+                    path_coverage: int = 0
 
                     if is_inv_fromPath:
 
-                        len_rev = 0
+                        len_rev: int = 0
                         for n in rev_nodes:
                             len_rev += get_len_node(d_nodes, n)
 
-                        are_INV[i-1] = (True, "path", ",".join([str(round(len_rev/len(a0Seq), 2)), str(
-                            len(rev_nodes))]), str(len(a1Path)-2-len(rev_nodes)))
+                        path_coverage = round(len_rev/len(a0Seq), 2)
 
-                        # print(chrom, pos, i)
+                    if path_coverage >= mincov:
+                        are_INV[i-1] = (True, "path", ",".join([str(path_coverage),
+                                        str(len(rev_nodes))]), str(len(a1Path)-2-len(rev_nodes)))
 
                     # -----------------------------------------------
                     # Check for pattern in alignment
@@ -267,9 +272,13 @@ def invannot_main(
 
                         is_inv_fromAln, frac_rev, n_rev_aln, frac_for, n_for_aln = is_INV_fromAln(
                             alnPAF)
+                        aln_coverage: int = 0
 
                         if is_inv_fromAln:
-                            are_INV[i-1] = (True, "aln", ",".join([str(round(frac_rev, 2)), str(
+                            aln_coverage = round(frac_rev, 2)
+
+                        if aln_coverage >= mincov:
+                            are_INV[i-1] = (True, "aln", ",".join([str(aln_coverage), str(
                                 n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
                         else:
                             are_INV[i-1] = (False, ".")
@@ -282,14 +291,17 @@ def invannot_main(
                 # ---------------------------------------------------
                 # Output results
                 # ---------------------------------------------------
-                output_bed_file.write("\t".join([
-                    chrom, pos, bubble,
-                    str(len(a0Seq)),
-                    ",".join([str(len(a1)) for a1 in a1Seqs]),
-                    ";".join(
-                        ["INV:" + ":".join(b[1:]) if b[0]
-                            else "DIV" for b in are_INV]
+                if any([b[0] for b in are_INV]):
+                    output_bed_file.write(
+                        "\t".join([
+                            chrom,
+                            pos,
+                            str(int(pos) + len(a0Seq) - 1),
+                            ";".join(
+                                [
+                                    "INV:" + ":".join(b[1:]) if b[0] else "DIV" for b in are_INV
+                                ]
+                            )
+                        ]) + "\n"
                     )
-                ]) + "\n")
-
     return outBED

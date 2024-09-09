@@ -3,7 +3,7 @@ from invpg.__constants__ import *
 from pathlib import Path
 from argparse import ArgumentParser
 from sys import argv
-from os import remove
+from os import remove, listdir
 from shutil import rmtree
 from invpg.inv_annot import invannot_main
 from invpg.variant_filter import filter_main
@@ -25,7 +25,6 @@ parser.add_argument(
     "-v",
     "--input_vcf_file",
     type=str,
-    required=True,
     help=HELP_INPUT_FILE_VCF,
 )
 parser.add_argument(
@@ -187,13 +186,6 @@ args = parser.parse_args()
 #######################################
 
 
-def extract_pathname_from_vcf(vcf_file: str) -> str:
-    # TODO add func to extract path name from vcf file.
-    raise NotImplementedError(
-        'For now please specify path name when working with GFA files.'
-    )
-
-
 def validate_input(
     is_input_gfa: bool,
     is_input_bed: bool,
@@ -230,11 +222,11 @@ def validate_input(
                 "You should provide only a .bed file when working with minigraph, or only a .gfa file otherwise."
             )
     if is_input_bed and not bool(ref_path):
-        return ('.bed', extract_pathname_from_vcf(vcf_file=vcf_file))
-    elif is_input_gfa and not bool(ref_path):
-        return ('.gfa', extract_pathname_from_vcf(vcf_file=vcf_file))
-    elif is_input_bed and bool(ref_path):
         return ('.bed', ref_path)
+    elif is_input_gfa and not bool(ref_path):
+        return ('.gfa', ref_path)
+    elif is_input_bed and bool(ref_path):
+        return ('.bed', None)
     return ('.gfa', ref_path)
 
 
@@ -252,6 +244,7 @@ def main() -> None:
                 gfa_file=args.input_gfa_file,
                 vcf_file=args.input_vcf_file,
                 temp_folder=f"tmp_{Path(args.gfa_file).stem}/",
+                mincov=args.mincov,
                 threads=args.threads,
             )
         case 'filtvcf':
@@ -278,38 +271,30 @@ def main() -> None:
                 minimum_coverage=args.mincov,
             )
         case _:
-            file_type, refID_path = validate_input(
-                is_input_gfa=bool(args.input_gfa_file),
-                is_input_bed=bool(args.input_bed_file),
-                ref_path=args.reference_path,
-            )
-            # First we filter the VCF file
-            temp_output_vcf: str = filter_main(
-                in_vcf=args.input_vcf_file,
-                div_pct=args.div_percentage,
-            )
-            # Then we rescue nodes in inversions that weren't described in the VCF
-            rescue_main(
-                in_file=args.input_gfa_file if file_type == '.gfa' else args.input_bed_file,
-                file_format=file_type,
-                reference_path=refID_path,
-            )
-            bed_file_raw = invannot_main(
-                gfa_file=args.input_gfa_file,
-                vcf_file=temp_output_vcf,
-                temp_folder=(
-                    temp_folder := f"tmp_{Path(args.gfa_file).stem}/"
-                ),
-                threads=args.threads,
-            )
-            filterannot_main(
-                input_annotation_file=bed_file_raw,
-                reference_name=args.reference_path,
-                minimum_coverage=args.mincov,
-            )
-            if not args.keep_files:
-                remove(temp_output_vcf)
-                rmtree(f"{temp_folder}/*.fa", ignore_errors=True)
-                rmtree(f"{temp_folder}/*.paf", ignore_errors=True)
+            if args.input_bed_file:
+                rescue_main(
+                    in_file=args.input_bed_file,
+                )
+            if args.input_vcf_file:
+                # First we filter the VCF file
+                temp_output_vcf: str = filter_main(
+                    in_vcf=args.input_vcf_file,
+                    div_pct=args.div_percentage,
+                )
+                # Then we rescue nodes in inversions that weren't described in the VCF
+                bed_file_raw = invannot_main(
+                    gfa_file=args.input_gfa_file,
+                    vcf_file=temp_output_vcf,
+                    temp_folder=(
+                        temp_folder := f"tmp_{Path(args.input_gfa_file).stem}/"
+                    ),
+                    mincov=args.mincov,
+                    threads=args.threads,
+                )
+                if not args.keep_files:
+                    remove(temp_output_vcf)
+                    for file in listdir(temp_folder):
+                        remove(f"{temp_folder}{file}")
+                    rmtree(temp_folder)
 
     exit(0)
