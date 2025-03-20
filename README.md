@@ -34,7 +34,10 @@ A tool to annotate inversions from pangenome graph bubbles.
   -g INPUT_GFA_FILE, --input_gfa_file INPUT_GFA_FILE
                         Path to a GFA-like file.
   -d DIV_PERCENTAGE, --div_percentage DIV_PERCENTAGE
-                        Originally intended as the estimated percentage of genome divergence. This parameter controls the leniency of the algorithm towards allele size difference (in nt) in the first step of variant/bubble filtering. Now advised to be set as `-d 10` no matter the level of genome divergence.  
+                        Originally intended as the estimated percentage of genome divergence. 
+                        This parameter controls the leniency of the algorithm towards allele 
+                        size difference (in nt) in the first step of variant/bubble filtering. 
+                        Now advised to be set as `-d 10` no matter the level of genome divergence.  
   -k, --keep_files      Keep temporary files after pipeline completion (mostly for debugging purposes).
   -r REFERENCE_PATH, --reference_path REFERENCE_PATH
                         ID for reference to use in output.
