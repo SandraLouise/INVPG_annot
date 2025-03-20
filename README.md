@@ -37,7 +37,7 @@ A tool to annotate inversions from pangenome graph bubbles.
                         Originally intended as the estimated percentage of genome divergence. 
                         This parameter controls the leniency of the algorithm towards allele 
                         size difference (in nt) in the first step of variant/bubble filtering. 
-                        Now advised to be set as `-d 10` no matter the level of genome divergence.  
+                        Now advised to be set as `-d 10` regardless of genome divergence level.  
   -k, --keep_files      Keep temporary files after pipeline completion (mostly for debugging purposes).
   -r REFERENCE_PATH, --reference_path REFERENCE_PATH
                         ID for reference to use in output.
