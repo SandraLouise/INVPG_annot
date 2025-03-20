@@ -1,4 +1,5 @@
 #! /bin/python3
+import re
 from re import split as rexpsplit
 from pathlib import Path
 from typing import Any
@@ -31,7 +32,7 @@ def parse_path(
 
     for i in range(0, len(parsed_path), 2):
         int_path.append(
-            int(parsed_path[i+1]) if parsed_path[i] == ">" else -int(parsed_path[i+1]))
+            int(parsed_path[i+1]) if parsed_path[i][0] == ">" else -int(parsed_path[i+1]))
 
     return int_path
 
@@ -118,28 +119,185 @@ def write_fasta(
         fasta.write(f">{seq_id}\n{sequence}")
 
 
-def get_len_node(
-    d_nodes: dict[str, int],
-    nodeID: int
+def get_node_len(
+    d_nodes: dict[str, str],
+    nodeID: str
 ) -> int:
     """_summary_
 
     Parameters
     ----------
-    d_nodes : dict[str, int]
-        _description_
-    nodeID : int
-        _description_
+    d_nodes : dict[str, str]
+        Dictionnary containing node ID as keys and node sequence as values.
+    nodeID : str
+        ID of the target node to retrieve the length of.
 
     Returns
     -------
     int
-        _description_
+        Length of the target node.
     """
     try:
-        return d_nodes[str_nodeID := str(abs(nodeID))]
+        return len(d_nodes[str_nodeID := str(abs(nodeID))])
+
     except KeyError:
         print(f"Error: node {str_nodeID} not found in GFA")
+
+def index_node_seq(
+    d_nodes: dict[str, str],
+    Sline: str
+) -> dict[str, str]:
+    """Index the node ID with their sequence in a dictionnary.
+
+    Parameters
+    ----------
+    d_nodes : dict[str, str]
+        Dictionnary containing node ID as keys and node sequence as values.
+    Sline : str
+        S line of a GFA.
+
+    Returns
+    -------
+    dict[str, str]
+        Updated index dictionnary.
+    """
+
+    __, nID, nSeq = Sline.rstrip().split("\t")[:3]
+    nID = str(re.sub("[^0-9]", "", nID))
+
+    d_nodes[nID] = nSeq
+
+    return d_nodes
+
+def allele_walk(info: str):
+    """Retrieve the alleles walk in the bubble.
+
+    Parameters
+    ----------
+    info : str
+        INFO field of a VCF line.
+
+    Returns
+    -------
+    list[str]
+        List of allele walks.
+    """
+    # vg deconstruct
+    if "AT=" in info:
+        aWalks: str = info.split("AT=")[1]
+
+        if ";" in aWalks:
+            aWalks: str = aWalks.split(";")[0]
+
+        aWalks: list[str] = aWalks.split(",")
+
+        # remove source and sink nodes from vg allele walks
+        corrected_aWalks: list[str] = list()
+        for w in aWalks:
+            int_walk: list[int] = parse_path(w)
+            int_walk = int_walk[1:-1] 
+
+            str_walk: str = ""
+            for i in range(0, len(int_walk)):
+                if int_walk[i] > 0:
+                    str_walk = str_walk + ">{}".format(str(int_walk[i]))
+                else:
+                    str_walk = str_walk + "<{}".format(str(abs(int_walk[i])))
+
+            corrected_aWalks.append(str_walk)
+        return corrected_aWalks
+
+    # gfatools-minigraph pipeline
+    elif "AWALK=" in info:
+        aWalks: str = info.split("AWALK=")[1]
+
+        if ";" in aWalks:
+            aWalks: str = aWalks.split(";")[0]
+
+        aWalks: list[str] = aWalks.split(",")
+        return aWalks
+
+def get_node_seq(
+    d_nodes: dict[str, str],
+    node_ID: str
+) -> str:
+    """Retrieve sequence of a node from index dictionnary.
+
+    Parameters
+    ----------
+    d_nodes : dict[str, str]
+        Dictionnary containing node ID as keys and node sequence as values.
+    node_ID : str
+        ID of the target node.
+
+    Returns
+    -------
+    str
+        Sequence of the target node.
+    """
+
+    return d_nodes[node_ID]
+
+def get_allele_seq(
+    allele_walk: list[int],
+    d_nodes: dict[str, str]
+) -> str:
+    """Recontruct the sequence of an allele from its walk through the bubble.
+
+    Parameters
+    ----------
+    allele_walk : list[int]
+        Parsed walk of an allele through its bubble (as an int list).
+    d_nodes : dict[str, str]
+        Dictionnary containing node ID as keys and node sequence as values.
+
+    Returns
+    -------
+    str
+        Sequence of the target node.
+    """
+
+    allele_seq: str = ""
+
+    for node_int in allele_walk:
+
+        # Forward traversal
+        if node_int > 0:
+            allele_seq = allele_seq + d_nodes[str(node_int)]
+        
+        # Reverse traversal
+        else:
+            allele_seq = allele_seq + reverse_complement(d_nodes[str(abs(node_int))])
+    
+    return allele_seq
+
+def reverse_complement(seq: str) -> str:
+    """Returns the reverse complement sequence of a sequence.
+
+    Parameters
+    ----------
+    seq : str
+        Original sequence
+
+    Returns
+    -------
+    str
+        Reverse complement sequence
+    """
+
+    d = {
+        "A" : "T",
+        "C" : "G",
+        "T" : "A",
+        "G" : "C"
+    }
+
+    revcomp: str = ""
+
+    for pos in range(len(seq)-1, -1, -1):
+        revcomp = revcomp + d[seq[pos]]
+    
+    return revcomp
 
 # ===========================================================
 # MAIN
@@ -170,12 +328,11 @@ def invannot_main(
     output_file : str
         _description_
     """
-    d_nodes: dict[str, int] = dict()
+    d_nodes: dict[str, str] = dict()
     with open(gfa_file, 'r', encoding='utf-8') as input_gfa_file:
         for line in input_gfa_file:
             if line.startswith("S"):
-                __, nID, nSeq = line.rstrip().split("\t")[:3]
-                d_nodes[nID] = len(nSeq)
+                d_nodes = index_node_seq(d_nodes, line)
 
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
@@ -189,24 +346,21 @@ def invannot_main(
                 # ---------------------------------------------------
                 # Retrieve coordinates of bubble
                 # ---------------------------------------------------
-                chrom, pos, bubble = line.split("\t")[0:3]
+                chrom, pos = line.split("\t")[0:2]
 
                 # ---------------------------------------------------
                 # Retrieve allele paths and sequences from line
                 # ---------------------------------------------------
-                if ";" in line.split("\t")[7]:
-                    aPaths: str = line.split("\t")[7].split("AT=")[
-                        1].split(";")[0]
-                else:
-                    aPaths: str = line.rstrip().split("\t")[7].split("AT=")[1]
+                info: str = line.split("\t")[7]
+                aWalks: list[str] = allele_walk(info)
 
-                a0Seq: str = line.split("\t")[3]
-                a1Seqs: str = line.split("\t")[4]
+                a0Walk: list[int] = parse_path(aWalks[0])
+                a0Seq: str = get_allele_seq(a0Walk, d_nodes)
 
-                aPaths: str = aPaths.split(",")
-                a1Seqs: str = a1Seqs.split(",")
+                # a1Seqs: str = line.split("\t")[4]
+                # a1Seqs: str = a1Seqs.split(",")
 
-                n_a1: int = len(a1Seqs)
+                n_a1: int = len(aWalks) - 1
                 are_INV: list = [None] * n_a1
 
                 # For potential alignment
@@ -216,7 +370,6 @@ def invannot_main(
                 # ---------------------------------------------------
                 # Check if alleles present INV pattern
                 # ---------------------------------------------------
-                a0Path: list[int] = parse_path(aPaths[0])
 
                 # Get balanced a1
                 f_INFO: str = line.split("\t")[7]
@@ -233,30 +386,31 @@ def invannot_main(
                     # -----------------------------------------------
                     # Check for pattern in path
                     # -----------------------------------------------
-                    a1Path = parse_path(aPaths[i])
+                    a1Walk = parse_path(aWalks[i])
 
                     is_inv_fromPath, rev_nodes = is_INV_fromPath(
-                        a0Path, a1Path)
+                        a0Walk, a1Walk)
                     path_coverage: int = 0
 
                     if is_inv_fromPath:
 
                         len_rev: int = 0
                         for n in rev_nodes:
-                            len_rev += get_len_node(d_nodes, n)
+                            len_rev += get_node_len(d_nodes, n)
 
                         path_coverage = round(len_rev/len(a0Seq), 2)
 
                     if path_coverage >= mincov:
                         are_INV[i-1] = (True, "path", ",".join([str(path_coverage),
-                                        str(len(rev_nodes))]), str(len(a1Path)-2-len(rev_nodes)))
+                                        str(len(rev_nodes))]), str(len(a1Walk)-len(rev_nodes)))
 
                     # -----------------------------------------------
                     # Check for pattern in alignment
                     # -----------------------------------------------
                     else:
 
-                        a1Seq = a1Seqs[i-1]
+                        # a1Seq = a1Seqs[i-1]
+                        a1Seq = get_allele_seq(a1Walk, d_nodes)
 
                         a1Fasta = f"{temp_folder}/{chrom}.{pos}.a{str(i+1)}.fa"
                         write_fasta(a1Fasta, "a1", a1Seq)
