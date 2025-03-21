@@ -44,7 +44,7 @@ A tool to annotate inversions from pangenome graph bubbles.
   -t THREADS, --threads THREADS
                         Number of threads used for parallelization (minimap2).
   -m MINCOV, --mincov MINCOV
-                        Minimum coverage of inversion signal.
+                        Minimum coverage of inversion signal. Advised to be set at 0.5.
 ```
 
 Example command line:
@@ -147,3 +147,11 @@ options:
   -m MINCOV, --mincov MINCOV
                         Minimum coverage of inversion signal.
 ```
+
+## Citation
+
+Romain, S., Dubois, S., Legeai, F., & Lemaitre, C. (2025). Investigating the topological motifs of inversions in pangenome graphs. *bioRxiv*, 2025-03, https://doi.org/10.1101/2025.03.14.643331.
+
+## Contact
+
+INVPG-annot is a [Genscale](https://team.inria.fr/genscale/) tool developed by Sandra Romain, Siegfried Dubois, Fabrice Legeai and Claire Lemaitre. For any bug report or feedback, please use the Github Issues form.
