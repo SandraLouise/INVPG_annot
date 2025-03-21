@@ -72,7 +72,7 @@ parser.add_argument(
 parser.add_argument(
     "-m",
     "--mincov",
-    type=int,
+    type=float,
     help=HELP_PARAM_MINCOV,
     default=DEFAULT_MINCOV,
 )
@@ -104,7 +104,7 @@ parser_invannot.add_argument(
 parser_invannot.add_argument(
     "-m",
     "--mincov",
-    type=int,
+    type=float,
     help=HELP_PARAM_MINCOV,
     default=DEFAULT_MINCOV,
 )
@@ -176,7 +176,7 @@ parser_filtannot.add_argument(
 parser_filtannot.add_argument(
     "-m",
     "--mincov",
-    type=int,
+    type=float,
     help=HELP_PARAM_MINCOV,
     default=DEFAULT_MINCOV,
 )
