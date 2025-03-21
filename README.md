@@ -53,9 +53,12 @@ Example command line:
 invpg -v bubbles.vcf -g graph.gfa -d 10 -t 8 -m 0.5
 ```
 
-### Impact of the `-d` parameter value
+### Impact of the `-d` and `-m` parameters
 
 The `-d` parameter controls the leniency of the algorithm towards allele size difference (in nucleotides) in the first step of variant/bubble filtering. Only the bubbles that pass this filtering step will be processed in the annotation step. The main motive behind the filtering step is to speed up the annotation step by ignoring the bubbles that are considered unlikely to represent inversions due to their allele sizes (e.g. SNPs, indels, deletions, insertions), given that inversion bubbles are expected to represent only a small portion of the total bubbles in a pangenome graph. As the sizes of two inversion alleles may not be strictly identical in a pangenome graph due to biological factors (inner genomic variation) and/or artificial factors (alignment artefacts generated during pangenome graph inference), the algorithm uses the `-d` parameter to define the level of allele size difference acceptable in a potential inversion bubble as `len_Am * d / 100` (`len_Am` being the size of the largest allele of the bubble). With `-d 0`, only the variants/bubbles that have at least two alleles with identical size will go through the annotation step. The higher the `-d` value used, the less likely inversion bubbles will be wrongly discarded due to high size difference between alleles, but the longer the annotation step will take. Based on several tests, we advise to use `-d 10` (allowing for an allele size difference of 10% of the largest allele) even with low divergence between genomes.
+
+
+The `-m` parameter sets the minimum coverage of inversion signal (as a fraction of the bubble nucleotidic length) that must be found on a bubble for it to be reported in the output. We advise to set is as `-m 0.5`. For more details on how this coverage is calculated, please see the Method section of our [paper](https://doi.org/10.1101/2025.03.14.643331).
 
 ## Running INVPG-annot step by step
 
