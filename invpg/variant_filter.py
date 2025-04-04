@@ -1,6 +1,7 @@
 #! /bin/python3
 from typing import Any
 from os import path
+from pathlib import Path
 
 # ===========================================================
 # Functions
@@ -189,7 +190,17 @@ def variant_filter(
     min_len: int = 50
     f_INFO: int = 7
 
-    with open(outVCF := f"{path.splitext(in_vcf)[0]}.balancedSV.vcf", 'w', encoding='utf-8') as out_vcf_balanced:
+    # Path for temporary files
+    if '/' not in output_prefix:
+        temp_folder = './'
+    else:
+        temp_folder = '/'.join(
+            [x for x in output_prefix.split('/')][:-1]
+        ) + '/'
+
+    Path(temp_folder).mkdir(parents=True, exist_ok=True)
+
+    with open(outVCF := f"{temp_folder}{timestamp}.balancedSV.vcf", 'w', encoding='utf-8') as out_vcf_balanced:
         with open(in_vcf, 'r', encoding='utf-8') as file:
             for line in file:
 

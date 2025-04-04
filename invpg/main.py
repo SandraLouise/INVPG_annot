@@ -206,7 +206,9 @@ def main() -> None:
         exit(1)
 
     # This timestamp helps identify temporary files of this run
-    timestamp: str = str(datetime.now()).replace(' ', '_')
+    ts = datetime.now()
+    print(f"Starting job {str(ts)}")
+    timestamp: str = str(ts).replace(' ', '_')
     match args.subcommands:
         case 'annot':
             invannot(
@@ -250,6 +252,7 @@ def main() -> None:
                 output_prefix=args.output_prefix,
                 timestamp=timestamp,
             )
+            print(f"Results output in {temp_output_vcf}")
             # Then we rescue nodes in inversions that weren't described in the VCF
             print("[" + str(datetime.now()) +
                   "] STEP 2: rescuing nodes in inversions")
