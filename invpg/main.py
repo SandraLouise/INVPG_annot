@@ -243,7 +243,7 @@ def main() -> None:
             )
         case _:
             # First we filter the VCF file
-            print("[" + datetime.now() + "] STEP 1: filtering VCF file")
+            print("[" + str(datetime.now()) + "] STEP 1: filtering VCF file")
             temp_output_vcf: str = variant_filter(
                 in_vcf=args.input_vcf_file,
                 div_pct=args.div_percentage,
@@ -251,7 +251,8 @@ def main() -> None:
                 timestamp=timestamp,
             )
             # Then we rescue nodes in inversions that weren't described in the VCF
-            print("[" + datetime.now() + "] STEP 2: rescuing nodes in inversions")
+            print("[" + str(datetime.now()) +
+                  "] STEP 2: rescuing nodes in inversions")
             invannot(
                 gfa_file=args.input_gfa_file,
                 vcf_file=temp_output_vcf,
@@ -260,7 +261,7 @@ def main() -> None:
                 mincov=args.mincov,
                 threads=args.threads,
             )
-            print("[" + datetime.now() + "] DONE!")
+            print("[" + str(datetime.now()) + "] DONE!")
             if not args.keep_files:
                 if '/' not in args.output_prefix:
                     temp_folder = './'

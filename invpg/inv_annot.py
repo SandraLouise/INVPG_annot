@@ -470,4 +470,4 @@ def invannot(
                             )
                         ]) + "\n"
                     )
-            print("Total number of bubbles:" + str(bubble_count))
+            print("Total number of bubbles: " + str(bubble_count))
