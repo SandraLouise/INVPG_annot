@@ -143,6 +143,7 @@ def get_node_len(
     except KeyError:
         print(f"Error: node {str_nodeID} not found in GFA")
 
+
 def index_node_seq(
     d_nodes: dict[str, str],
     Sline: str
@@ -168,6 +169,7 @@ def index_node_seq(
     d_nodes[nID] = nSeq
 
     return d_nodes
+
 
 def allele_walk(info: str):
     """Retrieve the alleles walk in the bubble.
@@ -195,7 +197,7 @@ def allele_walk(info: str):
         corrected_aWalks: list[str] = list()
         for w in aWalks:
             int_walk: list[int] = parse_path(w)
-            int_walk = int_walk[1:-1] 
+            int_walk = int_walk[1:-1]
 
             str_walk: str = ""
             for i in range(0, len(int_walk)):
@@ -217,6 +219,7 @@ def allele_walk(info: str):
         aWalks: list[str] = aWalks.split(",")
         return aWalks
 
+
 def get_node_seq(
     d_nodes: dict[str, str],
     node_ID: str
@@ -237,6 +240,7 @@ def get_node_seq(
     """
 
     return d_nodes[node_ID]
+
 
 def get_allele_seq(
     allele_walk: list[int],
@@ -264,12 +268,14 @@ def get_allele_seq(
         # Forward traversal
         if node_int > 0:
             allele_seq = allele_seq + d_nodes[str(node_int)]
-        
+
         # Reverse traversal
         else:
-            allele_seq = allele_seq + reverse_complement(d_nodes[str(abs(node_int))])
-    
+            allele_seq = allele_seq + \
+                reverse_complement(d_nodes[str(abs(node_int))])
+
     return allele_seq
+
 
 def reverse_complement(seq: str) -> str:
     """Returns the reverse complement sequence of a sequence.
@@ -286,17 +292,17 @@ def reverse_complement(seq: str) -> str:
     """
 
     d = {
-        "A" : "T",
-        "C" : "G",
-        "T" : "A",
-        "G" : "C"
+        "A": "T",
+        "C": "G",
+        "T": "A",
+        "G": "C"
     }
 
     revcomp: str = ""
 
     for pos in range(len(seq)-1, -1, -1):
         revcomp = revcomp + d[seq[pos]]
-    
+
     return revcomp
 
 # ===========================================================
@@ -390,7 +396,7 @@ def invannot_main(
 
                     is_inv_fromPath, rev_nodes = is_INV_fromPath(
                         a0Walk, a1Walk)
-                    path_coverage: int = 0
+                    path_coverage: float = .0
 
                     if is_inv_fromPath:
 
@@ -398,7 +404,7 @@ def invannot_main(
                         for n in rev_nodes:
                             len_rev += get_node_len(d_nodes, n)
 
-                        path_coverage = round(len_rev/len(a0Seq), 2)
+                        path_coverage: float = float(len_rev)/float(len(a0Seq))
 
                     if path_coverage >= mincov:
                         are_INV[i-1] = (True, "path", ",".join([str(path_coverage),
@@ -420,16 +426,16 @@ def invannot_main(
                         # Run minimap2
                         alnPAF: str = f"{temp_folder}/{chrom}.{pos}.a{str(i+1)}.paf"
                         run(
-                            f"minimap2 -cx asm20 --cs -r2k -t {threads} {a0Fasta} {a1Fasta} > {alnPAF} ",
+                            f"minimap2 -cx asm20 --cs -r2k -t {threads} {a0Fasta} {a1Fasta} 1> {alnPAF} 2> /dev/null ",
                             shell=True,
                         )
 
                         is_inv_fromAln, frac_rev, n_rev_aln, frac_for, n_for_aln = is_INV_fromAln(
                             alnPAF)
-                        aln_coverage: int = 0
+                        aln_coverage: float = .0
 
                         if is_inv_fromAln:
-                            aln_coverage = round(frac_rev, 2)
+                            aln_coverage = float(frac_rev)
 
                         if aln_coverage >= mincov:
                             are_INV[i-1] = (True, "aln", ",".join([str(aln_coverage), str(
