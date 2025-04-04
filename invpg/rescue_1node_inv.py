@@ -1,5 +1,6 @@
 #! /bin/python3
 from os import path
+from pathlib import Path
 
 
 def str_path_to_int(
@@ -71,17 +72,16 @@ def parse_P_line(
     return (path_ID, str_path, int_path)
 
 
-def parse_W_line(W_line):
-    # TODO
-
-    split_line: list[str] = W_line.rstrip().split("\t")
-    pass
-
-
 def find_rev_pattern(
     d_int_paths: dict[str, list[int]]
 ):
-    """ Find initial pattern ('+x,-y,+z' in any path p) """
+    """Find initial pattern ('+x,-y,+z' in any path p)
+
+    Parameters
+    ----------
+    d_int_paths : dict[str, list[int]]
+        Dictionary with path_ID as key and list of int nodes as value.
+    """
 
     list_IDs = list(d_int_paths.keys())
 
@@ -246,71 +246,37 @@ def search_gfa(
             print("\t".join([ref_path, str(start), str(end), "INV:path"]))
 
 
-def search_bed(in_bed):
-
-    # tmpDir = "tmp_aln"
-    # subprocess.run(f"mkdir {tmpDir}", shell=True)
-
-    # outBed = "inv.bed"
-    # out = open(outBed, "w")
-
-    with open(in_bed, "r", encoding='utf-8') as file:
-        for line in file:
-
-            parsed_line = line.rstrip().split("\t")
-            chrom, pos, end = parsed_line[:3]
-            size_bubble = int(parsed_line[3])
-            common = int(parsed_line[5])
-            a0Len, a1Len = parsed_line[6:8]
-            bubble = parsed_line[11].split(",")
-
-            if common == 1 and bubble[1] == bubble[2]:
-
-                # out.write("\t".join([
-                #     chrom, pos, end,
-                #     a0Len, a1Len,
-                #     ",".join(bubble),
-                #     "INV:path"
-                #     ]) + "\n")
-
-                print("\t".join([
-                    chrom, pos, end,
-                    a0Len, a1Len,
-                    ",".join(bubble),
-                    "INV:path"
-                ]))
-
-            # elif size_bubble > 3:
-            #     a0Seq, a1Seq = parsed_line[12:14]
-
-            #     a0Fasta = f"{tmpDir}/{chrom}.{pos}.a0.fa"
-            #     write_fasta(a0Fasta, "a0", a0Seq)
-            #     a1Fasta = f"{tmpDir}/{chrom}.{pos}.a1.fa"
-            #     write_fasta(a1Fasta, "a1", a1Seq)
-
-            #     alnPAF = f"{tmpDir}/{chrom}.{pos}.paf"
-            #     c_minimap2 = f"minimap2 -cx asm20 --cs -r2k -t 1 {a0Fasta} {a1Fasta} > {alnPAF} "
-            #     subprocess.run(c_minimap2, shell=True)
-            #     is_inv_fromAln, frac_rev, __, frac_for, __ = is_INV_fromAln(alnPAF)
-
-            #     if is_inv_fromAln:
-            #         out.write("\t".join([
-            #             chrom, pos, end,
-            #             a0Len, a1Len,
-            #             ",".join(bubble),
-            #             f"INV:aln:{str(round(frac_rev, 2))}:{str(round(frac_for, 2))}"
-            #             ]) + "\n")
-
-    # out.close()
-    # subprocess.run(f"rm -r {tmpDir}", shell=True)
-
-
-# in_file, file_format, REF_PATH = sys.argv[1:]
-def rescue_main(
-    in_file: str,
+def search_bed(
+    in_bed: str,
+    output_prefix: str,
+    timestamp: str,
 ):
-    search_bed(in_file)
+    # Path for temporary files
+    if '/' not in output_prefix:
+        temp_folder = './'
+    else:
+        temp_folder = '/'.join(
+            [x for x in output_prefix.split('/')][:-1]
+        ) + '/'
 
-# ===============================================================================
-# MAIN
-# ===============================================================================
+    Path(temp_folder).mkdir(parents=True, exist_ok=True)
+
+    with open(f"{temp_folder}{timestamp}.rescue1node.bed") as out_bed:
+        with open(in_bed, "r", encoding='utf-8') as file:
+            for line in file:
+
+                parsed_line = line.rstrip().split("\t")
+                chrom, pos, end = parsed_line[:3]
+                size_bubble = int(parsed_line[3])
+                common = int(parsed_line[5])
+                a0Len, a1Len = parsed_line[6:8]
+                bubble = parsed_line[11].split(",")
+
+                if common == 1 and bubble[1] == bubble[2]:
+
+                    print("\t".join([
+                        chrom, pos, end,
+                        a0Len, a1Len,
+                        ",".join(bubble),
+                        "INV:path",
+                    ]), file=out_bed)

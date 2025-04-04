@@ -3,12 +3,12 @@ from invpg.__constants__ import *
 from pathlib import Path
 from argparse import ArgumentParser
 from sys import argv
-from os import remove, listdir
-from shutil import rmtree
+from os import listdir, remove
+from datetime import datetime
 from invpg.inv_annot import invannot
-from invpg.variant_filter import filter_main
+from invpg.variant_filter import variant_filter
 from invpg.rescue_1node_inv import search_bed
-from invpg.filter_annot import filterannot_main
+from invpg.filter_annot import filterannot
 
 parser: ArgumentParser = ArgumentParser(
     description=SOFT_DESCRIPTION,
@@ -42,7 +42,7 @@ parser.add_argument(
     "-o",
     "--output_prefix",
     type=str,
-    help=HELP_PARAM_OUTPUT,
+    help=HELP_PARAM_OUTPUT_MAIN,
 )
 parser.add_argument(
     "-d",
@@ -94,6 +94,12 @@ parser_invannot.add_argument(
     help=HELP_INPUT_FILE_GFA,
 )
 parser_invannot.add_argument(
+    "-o",
+    "--output_prefix",
+    type=str,
+    help=HELP_PARAM_OUTPUT,
+)
+parser_invannot.add_argument(
     "-t",
     "--threads",
     type=int,
@@ -120,6 +126,12 @@ parser_filtervcf.add_argument(
     help=HELP_INPUT_FILE_VCF,
 )
 parser_filtervcf.add_argument(
+    "-o",
+    "--output_prefix",
+    type=str,
+    help=HELP_PARAM_OUTPUT,
+)
+parser_filtervcf.add_argument(
     "-d",
     "--div_percentage",
     type=int,
@@ -127,22 +139,48 @@ parser_filtervcf.add_argument(
     default=DEFAULT_PERCENTAGE,
 )
 
+## Subparser for rescue (DEPRECATED) ##
+
 parser_rescueinv: ArgumentParser = subparsers.add_parser(
     'rescue',
-    help=HELP_COMMAND_RESCUEINV,
+    description=HELP_COMMAND_RESCUEINV,
 )
 parser_rescueinv.add_argument(
-    "-g",
-    "--input_gfa_file",
+    "-o",
+    "--output_prefix",
     type=str,
-    default=None,
-    help=HELP_INPUT_FILE_GFA,
+    help=HELP_PARAM_OUTPUT,
+)
+parser_rescueinv.add_argument(
+    "-b",
+    "--input_bed_file",
+    type=str,
+    help=HELP_INPUT_FILE_BED,
 )
 
+## Subparser for filtannot (DEPRECATED) ##
 
 parser_filtannot: ArgumentParser = subparsers.add_parser(
     'filtannot',
-    help=HELP_COMMAND_FILTANNOT,
+    description=HELP_COMMAND_FILTANNOT,
+)
+parser_filtannot.add_argument(
+    "-b",
+    "--input_bed_file",
+    type=str,
+    help=HELP_INPUT_FILE_BED,
+)
+parser_filtannot.add_argument(
+    "-r",
+    "--reference_name",
+    type=str,
+    help=HELP_PARAM_REFID,
+)
+parser_filtannot.add_argument(
+    "-o",
+    "--output_prefix",
+    type=str,
+    help=HELP_PARAM_OUTPUT,
 )
 parser_filtannot.add_argument(
     "-m",
@@ -151,6 +189,7 @@ parser_filtannot.add_argument(
     help=HELP_PARAM_MINCOV,
     default=DEFAULT_MINCOV,
 )
+
 
 #######################################
 args = parser.parse_args()
@@ -165,6 +204,9 @@ def main() -> None:
             "Try to use -h or --help to get list of available commands."
         )
         exit(1)
+
+    # This timestamp helps identify temporary files of this run
+    timestamp: str = str(datetime.now()).replace(' ', '_')
     match args.subcommands:
         case 'annot':
             invannot(
@@ -173,42 +215,60 @@ def main() -> None:
                 temp_folder=f"tmp_{Path(args.gfa_file).stem}/",
                 mincov=args.mincov,
                 threads=args.threads,
+                output_prefix=args.output_prefix,
+                timestamp=timestamp,
             )
         case 'filtvcf':
-            filter_main(
+            filter(
                 in_vcf=args.input_vcf_file,
                 div_pct=args.div_percentage,
+                output_prefix=args.output_prefix,
+                timestamp=timestamp,
             )
         case 'rescue':
+            # DEPRECATED
             search_bed(
                 in_file=args.input_gfa_file,
+                output_prefix=args.output_prefix,
+                timestamp=timestamp,
             )
         case 'filtannot':
-            filterannot_main(
+            # DEPRECATED
+            filterannot(
                 input_annotation_file=args.input_bed_file,
-                reference_name=args.reference_path,
+                reference_name=args.reference_name,
                 minimum_coverage=args.mincov,
+                output_prefix=args.output_prefix,
+                timestamp=timestamp,
             )
         case _:
             # First we filter the VCF file
-            temp_output_vcf: str = filter_main(
+            print("[" + datetime.now() + "] STEP 1: filtering VCF file")
+            temp_output_vcf: str = variant_filter(
                 in_vcf=args.input_vcf_file,
                 div_pct=args.div_percentage,
+                output_prefix=args.output_prefix,
+                timestamp=timestamp,
             )
             # Then we rescue nodes in inversions that weren't described in the VCF
-            bed_file_raw = invannot(
+            print("[" + datetime.now() + "] STEP 2: rescuing nodes in inversions")
+            invannot(
                 gfa_file=args.input_gfa_file,
                 vcf_file=temp_output_vcf,
-                temp_folder=(
-                    temp_folder := f"tmp_{Path(args.input_gfa_file).stem}/"
-                ),
+                output_prefix=args.output_prefix,
+                timestamp=timestamp,
                 mincov=args.mincov,
                 threads=args.threads,
             )
+            print("[" + datetime.now() + "] DONE!")
             if not args.keep_files:
-                remove(temp_output_vcf)
-                for file in listdir(temp_folder):
-                    remove(f"{temp_folder}{file}")
-                rmtree(temp_folder)
-
+                if '/' not in args.output_prefix:
+                    temp_folder = './'
+                else:
+                    temp_folder = '/'.join(
+                        [x for x in args.output_prefix.split('/')][:-1]
+                    ) + '/'
+                for file_name in listdir(temp_folder):
+                    if file_name.startswith(timestamp):
+                        remove(f"{temp_folder}{file_name}")
     exit(0)

@@ -305,34 +305,29 @@ def reverse_complement(seq: str) -> str:
 
     return revcomp
 
-# ===========================================================
-# MAIN
-# ===========================================================
 
-# TODO: manque min_coverage
-
-
-def invannot_main(
+def invannot(
     gfa_file: str,
     vcf_file: str,
-    temp_folder: str,
+    output_prefix: str,
+    timestamp: str,
     mincov: float,
     threads: int,
-) -> str:
+) -> None:
     """_summary_
 
     Parameters
     ----------
     gfa_file : str
-        _description_
+        Path to a valid GFA file
     vcf_file : str
-        _description_
-    temp_folder : str
-        _description_
+        Path to a valid VCF file
+    output_prefix : str
+        Path to a .bed output file
+    mincov : float
+        Minimum coverage
     threads : int
-        _description_
-    output_file : str
-        _description_
+        Number of threads for minimap2
     """
     d_nodes: dict[str, str] = dict()
     with open(gfa_file, 'r', encoding='utf-8') as input_gfa_file:
@@ -340,9 +335,25 @@ def invannot_main(
             if line.startswith("S"):
                 d_nodes = index_node_seq(d_nodes, line)
 
+    # Defining output path
+    if not output_prefix.endswith('.bed'):
+        output_bed_file = output_prefix + '.bed'
+    else:
+        output_bed_file = output_prefix
+
+    # Path for temporary files
+    if '/' not in output_prefix:
+        temp_folder = './'
+    else:
+        temp_folder = '/'.join(
+            [x for x in output_prefix.split('/')][:-1]
+        ) + '/'
+
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
-    with open(outBED := f"{path.splitext(vcf_file)[0]}.raw.bed", 'w', encoding='utf-8') as output_bed_file:
+    bubble_count: int = 0
+
+    with open(output_bed_file, 'w', encoding='utf-8') as output_bed_file:
         with open(vcf_file, 'r', encoding='utf-8') as input_vcf_file:
             for line in input_vcf_file:
 
@@ -353,7 +364,7 @@ def invannot_main(
                 # Retrieve coordinates of bubble
                 # ---------------------------------------------------
                 chrom, pos = line.split("\t")[0:2]
-
+                bubble_count += 1
                 # ---------------------------------------------------
                 # Retrieve allele paths and sequences from line
                 # ---------------------------------------------------
@@ -363,14 +374,11 @@ def invannot_main(
                 a0Walk: list[int] = parse_path(aWalks[0])
                 a0Seq: str = get_allele_seq(a0Walk, d_nodes)
 
-                # a1Seqs: str = line.split("\t")[4]
-                # a1Seqs: str = a1Seqs.split(",")
-
                 n_a1: int = len(aWalks) - 1
                 are_INV: list = [None] * n_a1
 
                 # For potential alignment
-                a0Fasta: str = f"{temp_folder}/{chrom}.{pos}.a0.fa"
+                a0Fasta: str = f"{temp_folder}{timestamp}{chrom}.{pos}.a0.fa"
                 write_fasta(a0Fasta, "a0", a0Seq)
 
                 # ---------------------------------------------------
@@ -418,13 +426,11 @@ def invannot_main(
                         # a1Seq = a1Seqs[i-1]
                         a1Seq = get_allele_seq(a1Walk, d_nodes)
 
-                        a1Fasta = f"{temp_folder}/{chrom}.{pos}.a{str(i+1)}.fa"
+                        a1Fasta = f"{temp_folder}{timestamp}{chrom}.{pos}.a{str(i+1)}.fa"
                         write_fasta(a1Fasta, "a1", a1Seq)
-                        # run(f"echo '>a1' > {a1Fasta}", shell=True)
-                        # run(f"echo {a1Seq} >> {a1Fasta}", shell=True)
 
                         # Run minimap2
-                        alnPAF: str = f"{temp_folder}/{chrom}.{pos}.a{str(i+1)}.paf"
+                        alnPAF: str = f"{temp_folder}{timestamp}{chrom}.{pos}.a{str(i+1)}.paf"
                         run(
                             f"minimap2 -cx asm20 --cs -r2k -t {threads} {a0Fasta} {a1Fasta} 1> {alnPAF} 2> /dev/null ",
                             shell=True,
@@ -464,4 +470,4 @@ def invannot_main(
                             )
                         ]) + "\n"
                     )
-    return outBED
+            print("Total number of bubbles:" + str(bubble_count))

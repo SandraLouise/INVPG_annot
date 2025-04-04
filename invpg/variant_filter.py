@@ -6,6 +6,7 @@ from os import path
 # Functions
 # ===========================================================
 
+
 def allele_length_mg(info: str):
     """Extracts reference and alternative allele lengths from VCF produced by gfatools-minigraph pipeline.
 
@@ -26,7 +27,7 @@ def allele_length_mg(info: str):
 
     if ";" in alen:
         alen: str = alen.split(";")[0]
-    
+
     if "," in alen:
         list_alen: list[str] = alen.split(",")
 
@@ -37,6 +38,7 @@ def allele_length_mg(info: str):
         alt_len: list[int] = [0]
 
     return ref_len, alt_len
+
 
 def allele_length_vg(
     ref: str,
@@ -65,10 +67,11 @@ def allele_length_vg(
         list_alt: list[str] = alt.split(",")
     else:
         list_alt: list[str] = [alt]
-    
+
     alt_len: list[int] = [len(a) for a in list_alt]
 
     return ref_len, alt_len
+
 
 def allele_length(
     ref: str,
@@ -94,10 +97,10 @@ def allele_length(
 
     if "ALEN=" in info:
         return allele_length_mg(info)
-    
+
     else:
         return allele_length_vg(ref, alt)
-    
+
 
 def parse_vcf_line(line: str) -> dict[str, Any]:
     """_summary_
@@ -161,9 +164,11 @@ def is_balanced(
 # ===========================================================
 
 
-def filter_main(
+def variant_filter(
     in_vcf: str,
-    div_pct: int
+    div_pct: int,
+    output_prefix: str,
+    timestamp: str,
 ) -> str:
     """_summary_
 

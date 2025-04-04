@@ -1,6 +1,6 @@
 #! /bin/python3
 from typing import Any
-from os import path
+from pathlib import Path
 
 
 def read_input(
@@ -174,10 +174,12 @@ def format_entry(
     )
 
 
-def filterannot_main(
+def filterannot(
     input_annotation_file: str,
     reference_name: str,
     minimum_coverage: float,
+    output_prefix: str,
+    timestamp: str,
 ) -> None:
     """_summary_
 
@@ -190,8 +192,18 @@ def filterannot_main(
     minimum_coverage : float
         _description_
     """
+    # Path for temporary files
+    if '/' not in output_prefix:
+        temp_folder = './'
+    else:
+        temp_folder = '/'.join(
+            [x for x in output_prefix.split('/')][:-1]
+        ) + '/'
+
+    Path(temp_folder).mkdir(parents=True, exist_ok=True)
+
     # Read input entries and save INV entries
-    with open(f"{path.splitext(input_annotation_file)[0]}.filtered.bed", "w", encoding='utf-8') as output_file:
+    with open(f"{temp_folder}{timestamp}.filtered.bed", "w", encoding='utf-8') as output_file:
         with open(input_annotation_file, "r", encoding='utf-8') as input_file:
             for line in input_file:
                 if is_inv(line):
@@ -213,32 +225,3 @@ def filterannot_main(
                             reference_name=reference_name
                         )
                     )
-
-        # ==========================================#
-        # FILTER ON NESTED BUBBLES WAS DEACTIVATED #
-        # ==========================================#
-
-        # # Filter INV entries
-        # i = 1
-        # while i < len(entries):
-
-        #     prev = entries[i-1]
-        #     current = entries[i]
-
-        #     if i == 0:
-        #         i += 1
-
-        #     elif is_nested(prev, current):
-
-        #         to_remove = i - lowest_cov_entry(prev, current)
-
-        #         # Remove entry with lowest signal coverage
-        #         del entries[to_remove]
-
-        #         # Update i
-        #         i -= 1
-
-        #     else:
-
-        #         i += 1
-        # ==========================================#
