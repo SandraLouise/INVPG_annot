@@ -11,11 +11,12 @@ HELP_INPUT_FILE_VCF: str = "Path to a VCF file."
 HELP_INPUT_FILE_BED: str = "Path to a BED file. Should be provided solely when working with minigraph graphs."
 # Parameters help strings
 HELP_PARAM_THREADS: str = "Number of threads used for parallelization (minimap2)."
-HELP_PARAM_PERCENTAGE: str = "Estimated percentage of genome divergence (for variants filtering)."
-HELP_PARAM_MINCOV: str = "Minimum coverage of inversion signal."
+HELP_PARAM_PERCENTAGE: str = "Originally intended as the estimated percentage of genome divergence. This parameter controls the leniency of the algorithm towards allele size difference (in nt) in the first step of variant/bubble filtering. Now advised to be set as `-d 10` regardless of genome divergence level. "
+HELP_PARAM_MINCOV: str = "Minimum coverage of inversion signal. Advised to be set at 0.5."
 HELP_PARAM_REFID: str = "ID for reference to use in output."
 HELP_PARAM_KEEP: str = "Keep temporary files after pipeline completion (mostly for debugging purposes)."
+HELP_PARAM_OUTPUT: str = "Output prefix name, used both for temporary files and final output."
 # Default value for parameters
-DEFAULT_PERCENTAGE: int = 1
+DEFAULT_PERCENTAGE: int = 10
 DEFAULT_MINCOV: float = .5
 DEFAULT_THREADS: int = 1
