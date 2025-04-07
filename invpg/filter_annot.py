@@ -6,17 +6,17 @@ from pathlib import Path
 def read_input(
     line: str
 ) -> list[str | int]:
-    """_summary_
+    """Transfors ma bed line in a list, extracting meaningful information
 
     Parameters
     ----------
     line : str
-        _description_
+        the bed line
 
     Returns
     -------
     list[str | int]
-        _description_
+        formats the entry as a list
     """
 
     f_ref: int = 0
@@ -24,36 +24,45 @@ def read_input(
     f_len: int = 3
     f_annot: int = 5
 
-    line = line.rstrip().split("\t")
+    line: list[str] = line.rstrip().split("\t")
 
-    entry = [line[f_ref], int(line[f_start]), int(
+    return [line[f_ref], int(line[f_start]), int(
         line[f_start])+int(line[f_len])-1, line[f_annot]]
-
-    return entry
 
 
 def is_inv(
-    line
+    line: str,
 ) -> bool:
-    """_summary_
+    """Analyses the annotation tag from a line of the bed file
 
     Parameters
     ----------
-    line : _type_
-        _description_
+    line : str
+        text describing the variation
 
     Returns
     -------
     bool
-        _description_
+        if the inversion is flagged as an inversion
     """
     return "INV" in line
 
 
 def best_inv_annot(
-    annot
-):
+    annot: str,
+) -> str:
+    """Give a list of annotations, returns the best annotation (maximizing coverage)
 
+    Parameters
+    ----------
+    annot : str
+        annotations separated by semicolumns
+
+    Returns
+    -------
+    str
+        the descriptor of the best annotation
+    """
     if ";" in annot:
         best_annot = "na:na:0.0"
         for a in list(annot.split(";")):
@@ -71,10 +80,23 @@ def best_inv_annot(
 
 
 def is_nested(
-    prev_entry,
-    current_entry,
+    prev_entry: list[Any],
+    current_entry: list[Any],
 ) -> bool:
+    """Searches if the bubble is within a bubble or not
 
+    Parameters
+    ----------
+    prev_entry : list[Any]
+        descriptor of the previous entry
+    current_entry : list[Any]
+        descriptor of the current entry
+
+    Returns
+    -------
+    bool
+        information about the bubble being nested
+    """
     start: int = 1
     end: int = 2
 
@@ -84,17 +106,17 @@ def is_nested(
 def signal_cov(
     annot: str
 ) -> float:
-    """_summary_
+    """Extracts coverage inforamtion
 
     Parameters
     ----------
     annot : str
-        _description_
+        string describing the annotation
 
     Returns
     -------
     float
-        _description_
+        coverage value
     """
     return float(annot.split(":")[2].split(",")[0])
 
@@ -103,19 +125,19 @@ def lowest_cov_entry(
     prev_entry: list[Any],
     current_entry: list[Any],
 ) -> int:
-    """_summary_
+    """Searches for the input with the lowest coverage
 
     Parameters
     ----------
     prev_entry : list[Any]
-        _description_
+        descriptor of the previous entry
     current_entry : list[Any]
-        _description_
+        descriptor of the current entry
 
     Returns
     -------
     int
-        _description_
+        id of the lowest input
     """
     i_prev: int = 1
     i_current: int = 0
@@ -151,19 +173,19 @@ def format_entry(
     entry: list[str | int],
     reference_name: str,
 ) -> str:
-    """_summary_
+    """Concatenates the input in a specific format
 
     Parameters
     ----------
     entry : list[str  |  int]
-        _description_
+        File input
     reference_name : str
-        _description_
+        Name of the path
 
     Returns
     -------
     str
-        _description_
+        A formated string
     """
     start: int = 1
     end: int = 2
@@ -181,16 +203,16 @@ def filterannot(
     output_prefix: str,
     timestamp: str,
 ) -> None:
-    """_summary_
+    """Filters annotations of inversions obtained from the annotation step.
 
     Parameters
     ----------
     input_annotation_file : str
-        _description_
+        Path to input bed file
     reference_name : str
-        _description_
+        Name of the reference path
     minimum_coverage : float
-        _description_
+        Minimum coverage of inversion signal. 
     """
     # Path for temporary files
     if '/' not in output_prefix:
