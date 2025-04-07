@@ -205,7 +205,7 @@ def main() -> None:
         )
         exit(1)
 
-    # This timestamp helps identify temporary files of this run
+    # This timestamp helps identify temporary files of this run (for deletion later on)
     ts = datetime.now()
     print(f"Starting job {str(ts)}")
     timestamp: str = str(ts).replace(' ', '_')
@@ -255,7 +255,8 @@ def main() -> None:
             print(f"Results output in {temp_output_vcf}")
             # Then we rescue nodes in inversions that weren't described in the VCF
             print("[" + str(datetime.now()) +
-                  "] STEP 2: rescuing nodes in inversions")
+                  "] STEP 2: rescuing nodes in inversions"
+                  )
             invannot(
                 gfa_file=args.input_gfa_file,
                 vcf_file=temp_output_vcf,
