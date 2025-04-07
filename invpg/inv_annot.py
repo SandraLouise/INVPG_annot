@@ -9,19 +9,20 @@ from shutil import rmtree
 
 
 def parse_path(
-    allele_path: str
+    allele_path: str,
 ) -> list[int]:
     """From VCF allele path, parse to get list of signed nodes 
     (sign = node traversal strand). 
 
     Parameters
     ----------
-    allele_path : _type_
-        _description_
+    allele_path : str
+        a P-line style path field
 
     Returns
     -------
     list[int]
+    Formatted list from the input path
     Examples: 
         - ">43>45>46" --> [43,45,46]
         - ">43<44>46" --> [43,-44,46]
@@ -41,11 +42,19 @@ def is_INV_fromPath(
     a0_path: list[int],
     a1_path: list[int],
 ) -> tuple[bool, list[int]]:
-    """ Checks whether paths from a bubble indicate the presence of an INVersion.
+    """Checks whether paths from a bubble indicate the presence of an INVersion.
 
-    Input: parsed path from parse_path() function
-    Returns: boolean
+    Parameters
+    ----------
+    a0_path : list[int], a1_path : list[int]
+        parsed path from parse_path() function
+
+    Returns
+    -------
+    tuple[bool, list[int]]
+        if the pattern was found and the associated bubble nodes
     """
+
     inverted_nodes: list[int] = list()
 
     is_patternFound: bool = False
@@ -73,7 +82,7 @@ def is_INV_fromAln(
     Returns
     -------
     tuple[bool, float, int, float, int]
-        _description_
+        information about the alignment result
     """
     is_compRev: bool = False
     cum_for_len: int = 0
@@ -104,16 +113,16 @@ def write_fasta(
     seq_id: str,
     sequence: str
 ) -> None:
-    """_summary_
+    """Writes sequence as a .fasta for minimap2
 
     Parameters
     ----------
     fasta_name : str
-        _description_
+        output name for file
     seq_id : str
-        _description_
+        custom sequence ID
     sequence : str
-        _description_
+        series of nucleotides
     """
     with open(fasta_name, 'w', encoding='utf-8') as fasta:
         fasta.write(f">{seq_id}\n{sequence}")
@@ -123,7 +132,7 @@ def get_node_len(
     d_nodes: dict[str, str],
     nodeID: str
 ) -> int:
-    """_summary_
+    """Gets the length of a node in the graph
 
     Parameters
     ----------
@@ -314,7 +323,7 @@ def invannot(
     mincov: float,
     threads: int,
 ) -> None:
-    """_summary_
+    """Loops over all the bed lines, iterating to analyse and reconver inversions.
 
     Parameters
     ----------
