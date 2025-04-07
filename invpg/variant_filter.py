@@ -3,10 +3,6 @@ from typing import Any
 from os import path
 from pathlib import Path
 
-# ===========================================================
-# Functions
-# ===========================================================
-
 
 def allele_length_mg(info: str):
     """Extracts reference and alternative allele lengths from VCF produced by gfatools-minigraph pipeline.
@@ -104,17 +100,17 @@ def allele_length(
 
 
 def parse_vcf_line(line: str) -> dict[str, Any]:
-    """_summary_
+    """Parse a line from a VCF file
 
     Parameters
     ----------
     line : str
-        _description_
+        the raw line from the input VCF
 
     Returns
     -------
     dict[str, Any]
-        _description_
+        formatted information
     """
 
     tab_parsed: list[str] = line.rstrip().split("\t")
@@ -141,28 +137,24 @@ def is_balanced(
     alt_len: int,
     div: int,
 ) -> bool:
-    """_summary_
+    """Analyses if the inversion is balanced or not
 
     Parameters
     ----------
     ref_len : int
-        _description_
+        length on the reference path
     alt_len : int
-        _description_
+        length on the alternate path
 
     Returns
     -------
     bool
-        _description_
+        if the inversion is balanced
     """
     max_a: int = max(ref_len, alt_len)
     min_a: int = min(ref_len, alt_len)
 
     return max_a - min_a <= (div * max_a)
-
-# ===========================================================
-# Main
-# ===========================================================
 
 
 def variant_filter(
@@ -171,14 +163,14 @@ def variant_filter(
     output_prefix: str,
     timestamp: str,
 ) -> str:
-    """_summary_
+    """Selects bubbles corresponding to putative balanced SVs.
 
     Parameters
     ----------
     in_vcf : str
-        _description_
+        input VCF path to file
     div_pct : int
-        _description_
+        Originally intended as the estimated percentage of genome divergence. This parameter controls the leniency of the algorithm towards allele size difference (in nt) in the first step of variant/bubble filtering.
 
     Returns
     -------
