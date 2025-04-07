@@ -3,8 +3,8 @@ SOFT_DESCRIPTION: str = "A tool to annotate inversions from pangenome graph bubb
 # Global commands help
 HELP_COMMAND_INVANNOT: str = "Annotates the bubbles as \"INV:path\" or \"INV:aln\"."
 HELP_COMMAND_FILTERVCF: str = "Selects bubbles corresponding to putative balanced SVs."
-HELP_COMMAND_RESCUEINV: str = "Detects one-node inversions that may be missing from vg deconstruct VCF."
-HELP_COMMAND_FILTANNOT: str = "Filters annotations of inversions obtained from the annotation step."
+HELP_COMMAND_RESCUEINV: str = "[DEPRECATED] Detects one-node inversions that may be missing from vg deconstruct VCF."
+HELP_COMMAND_FILTANNOT: str = "[DEPRECATED] Filters annotations of inversions obtained from the annotation step."
 # Input help strings
 HELP_INPUT_FILE_GFA: str = "Path to a GFA-like file.  Should be provided solely when not using minigraph graphs."
 HELP_INPUT_FILE_VCF: str = "Path to a VCF file."
