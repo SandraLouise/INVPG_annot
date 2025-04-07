@@ -6,17 +6,17 @@ from pathlib import Path
 def str_path_to_int(
     str_path: str
 ) -> list[int]:
-    """_summary_
+    """Conerts a path of str to ints
 
     Parameters
     ----------
     str_path : str
-        _description_
+        The P-line path field
 
     Returns
     -------
     list[int]
-        _description_
+        a representation as a series of positive and negative ints of the string
     """
     return [
         int(str_node[:-1]) if str_node[-1] == "+" else -int(str_node[:-1]) for str_node in str_path.split(',')
@@ -26,17 +26,17 @@ def str_path_to_int(
 def int_path_to_str(
     int_path: list[int]
 ) -> str:
-    """_summary_
+    """Converts a path of ints to str format
 
     Parameters
     ----------
     int_path : list[int]
-        _description_
+        the P-line path as a series of ints
 
     Returns
     -------
     str
-        _description_
+        the character chain describing the same path
     """
     return ",".join(
         [
@@ -48,20 +48,20 @@ def int_path_to_str(
 def parse_P_line(
     P_line: str
 ) -> tuple[str, str, list[int]]:
-    """_summary_
+    """Parses a P-line from GFAspec
 
     Parameters
     ----------
     P_line : str
-        _description_
+        Full line from a GFA file
 
     Returns
     -------
     tuple[str, str, list[int]]
-        _description_
+        formatted information from the line
     """
 
-    __, path_ID, str_path = P_line.rstrip().split("\t")[:3]
+    path_ID, str_path = P_line.rstrip().split("\t")[1:3]
 
     if str_path[0] == "s":
         str_nodes = [n[1:] for n in str_path.split(",")]
@@ -120,8 +120,24 @@ def find_rev_pattern(
     return d_rev_patterns
 
 
-def find_whole_pattern(d_str_paths, d_rev_patterns):
-    """ Find whole pattern ('+x,+y,+z' in path != p) """
+def find_whole_pattern(
+    d_str_paths: dict,
+    d_rev_patterns: dict,
+):
+    """Find whole pattern ('+x,+y,+z' in path != p)
+
+    Parameters
+    ----------
+    d_str_paths : dict
+        dictionnary of paths
+    d_rev_patterns : dict
+        reverse patterns
+
+    Returns
+    -------
+    dict
+        a subselection of reverse patterns filtered using d_str_paths
+    """
 
     d_inv_pattern = {}
     # key = rev_pat_str
@@ -156,7 +172,22 @@ def find_whole_pattern(d_str_paths, d_rev_patterns):
     return d_inv_pattern
 
 
-def write_fasta(fasta_name, seq_id, sequence):
+def write_fasta(
+    fasta_name: str,
+    seq_id: str,
+    sequence: str,
+):
+    """Writes to disk a sequence as a .fasta file
+
+    Parameters
+    ----------
+    fasta_name : str
+        path + name of the fasta file to be written
+    seq_id : str
+        ID of the fasta sequence
+    sequence : str
+        Nucleotidic sequence
+    """
 
     with open(fasta_name, "w") as fasta:
 
@@ -164,12 +195,22 @@ def write_fasta(fasta_name, seq_id, sequence):
         fasta.write(sequence)
 
 
-def is_INV_fromAln(aln_paf):
-    """ Checks whether the nodes sequences are reverse complement
+def is_INV_fromAln(
+    aln_paf: str,
+) -> bool:
+    """Checks whether the nodes sequences are reverse complement
 
-    Input: name of the aln file
-    Returns: boolean
+    Parameters
+    ----------
+    aln_paf : str
+        Path to a alignment file
+
+    Returns
+    -------
+    bool
+        nodes are reverse complement
     """
+
     is_compRev = False
     cum_for_len = 0
     cum_rev_len = 0
@@ -200,6 +241,15 @@ def search_gfa(
     in_gfa: str,
     ref_path: str,
 ) -> None:
+    """Search for 1-sized in GFA file
+
+    Parameters
+    ----------
+    in_gfa : str
+        Ipnut GFA file path
+    ref_path : str
+        Name (ID) of the reference path in the graph
+    """
 
     d_node_len: dict = {}
     d_str_paths: dict = {}
@@ -251,6 +301,17 @@ def search_bed(
     output_prefix: str,
     timestamp: str,
 ):
+    """Detects one-node inversions that may be missing from vg deconstruct VCF.
+
+    Parameters
+    ----------
+    in_bed : str
+        path to a input bed file
+    output_prefix : str
+        path to a folder to store temporary files and results
+    timestamp : str
+        timecode for temporary files
+    """
     # Path for temporary files
     if '/' not in output_prefix:
         temp_folder = './'
