@@ -25,7 +25,7 @@ python -m pip install . --quiet
 You can use a single command to execute the whole pipeline or do a step-by-step analysis (see below).
 
 ```bash
-usage: invpg [-h] -v INPUT_VCF_FILE -g INPUT_GFA_FILE [-d DIV_PERCENTAGE] [-k] [-t THREADS] [-m MINCOV]
+usage: invpg [-h] -v INPUT_VCF_FILE -g INPUT_GFA_FILE [-o OUTPUT_PREFIX] [-d DIV_PERCENTAGE] [-m MINCOV] [-k] [-t THREADS]
 
 A tool to annotate inversions from pangenome graph bubbles.
   -h, --help            show this help message and exit
@@ -33,18 +33,21 @@ A tool to annotate inversions from pangenome graph bubbles.
                         Path to a VCF file.
   -g INPUT_GFA_FILE, --input_gfa_file INPUT_GFA_FILE
                         Path to a GFA-like file.
-  -d DIV_PERCENTAGE, --div_percentage DIV_PERCENTAGE
-                        Originally intended as the estimated percentage of genome divergence. 
+  -o, --output_prefix OUTPUT_PREFIX
+                        Name of output BED file (without file extension). Can be a path to 
+                        control output directory.
+  -d DIV_PERCENTAGE, --div_percentage DIV_PERCENTAGE 
                         This parameter controls the leniency of the algorithm towards allele 
-                        size difference (in nt) in the first step of variant/bubble filtering. 
-                        Now advised to be set as `-d 10` regardless of genome divergence level.  
-  -k, --keep_files      Keep temporary files after pipeline completion (mostly for debugging purposes).
-  -r REFERENCE_PATH, --reference_path REFERENCE_PATH
-                        ID for reference to use in output.
-  -t THREADS, --threads THREADS
-                        Number of threads used for parallelization (minimap2).
+                        size difference (in nt) in the first step of variant/bubble filtering.
+                        Only the non-reference alleles that have a size difference <= d% will 
+                        go through the annotation step. (default: 10)
   -m MINCOV, --mincov MINCOV
-                        Minimum coverage of inversion signal. Advised to be set at 0.5.
+                        Minimum coverage of inversion signal as fraction of bubble length. 
+                        (default: 0.5)
+  -k, --keep_files      Keep temporary files after pipeline completion (mostly for debugging 
+                        purposes).
+  -t THREADS, --threads THREADS
+                        Number of threads used for parallelization (only for minimap2).
 ```
 
 Example command line:
@@ -59,6 +62,23 @@ The `-d` parameter controls the leniency of the algorithm towards allele size di
 
 
 The `-m` parameter sets the minimum coverage of inversion signal (as a fraction of the bubble nucleotidic length) that must be found on a bubble for it to be reported in the output. We advise to set is as `-m 0.5`. For more details on how this coverage is calculated, please see the Method section of our [paper](https://doi.org/10.1101/2025.03.14.643331).
+
+### Output files
+
+#### Final BED annotation file
+
+By default, the `invpg` command outputs a single BED file in which each line describes a bubble annotated as inversion. The three first fields contain classical BED information (*i.e.* reference chromosome ID, start position, end position). The fourth field contains additionnal information about the annotation for each non-reference allele that passed the first step filter (separated by `;`) in the form "INV:`signaltype`:`cov`,`x`" or "DIV" (when the inversion signal was < `--mincov`). 
+
+- `signaltype` can be either "path" or "aln" depending on the source of the signal used for the annotation (path-based or alignment-based).
+- `cov` is the fraction of inversion signal coverage.
+- `x` corresponds to additionnal statistics that can be ignored (used for development that will soon be removed from the output).
+
+#### Intermediate files (when using `-k` parameter)
+
+There are two types of intermediate files: one VCF file and multiple PAF files.
+
+- The VCF file (name ending with `.balancedSV.vcf`) contains all input VCF lines that pass the first step filter. It is the file used as input for the second step of annotation.
+- The PAF files contain the minimap2 alignment results for each allele going through the second step of annotation. The number of PAF files can be very large depending on the input VCF contents. We plan to optimize the number of PAF files generated in the future.
 
 ## Running INVPG-annot step by step
 
@@ -112,44 +132,6 @@ options:
 
 Output:
 - `input_vcf_file`.annot.tsv  A TSV (tabular separated) file with INV annotated bubbles, one bubble per line.
-
-### 3. Detecting one-node inversions from the graph [DEPRECATED]
-
-> [!WARNING]\
-> This step is no longer part of the INVPG-annot default pipeline and is deprecated.
-
-Detects one-node inversions that may be missing from `vg deconstruct` VCF.
-
-```bash
-usage: invpg rescue [-h] [-g INPUT_GFA_FILE] [-b INPUT_BED_FILE] [-r REFERENCE_PATH]
-
-options:
-  -h, --help            show this help message and exit
-  -g INPUT_GFA_FILE, --input_gfa_file INPUT_GFA_FILE
-                        Path to a GFA-like file. Should be provided solely when not using minigraph graphs.
-  -b INPUT_BED_FILE, --input_bed_file INPUT_BED_FILE
-                        Path to a BED file. Should be provided solely when working with minigraph graphs.
-  -r REFERENCE_PATH, --reference_path REFERENCE_PATH
-                        ID for reference to use in output.
-```
-
-### 4. Filtering annotations [DEPRECATED]
-
-> [!WARNING]\
-> This step is no longer part of the INVPG-annot default pipeline and is deprecated.
-
-```bash
-usage: invpg filtannot [-h] [-b INPUT_BED_FILE] [-r REFERENCE_PATH] [-m MINCOV]
-
-options:
-  -h, --help            show this help message and exit
-  -b INPUT_BED_FILE, --input_bed_file INPUT_BED_FILE
-                        Path to a BED file. Should be provided solely when working with minigraph graphs.
-  -r REFERENCE_PATH, --reference_path REFERENCE_PATH
-                        ID for reference to use in output.
-  -m MINCOV, --mincov MINCOV
-                        Minimum coverage of inversion signal.
-```
 
 ## Citation
 
