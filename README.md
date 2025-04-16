@@ -29,24 +29,24 @@ usage: invpg [-h] -v INPUT_VCF_FILE -g INPUT_GFA_FILE [-o OUTPUT_PREFIX] [-d DIV
 
 A tool to annotate inversions from pangenome graph bubbles.
   -h, --help            show this help message and exit
-  -v INPUT_VCF_FILE, --input_vcf_file INPUT_VCF_FILE
+  -v  --input_vcf_file INPUT_VCF_FILE
                         Path to a VCF file.
-  -g INPUT_GFA_FILE, --input_gfa_file INPUT_GFA_FILE
+  -g  --input_gfa_file INPUT_GFA_FILE
                         Path to a GFA-like file.
   -o, --output_prefix OUTPUT_PREFIX
                         Name of output BED file (without file extension). Can be a path to 
                         control output directory.
-  -d DIV_PERCENTAGE, --div_percentage DIV_PERCENTAGE 
+  -d  --div_percentage DIV_PERCENTAGE 
                         This parameter controls the leniency of the algorithm towards allele 
                         size difference (in nt) in the first step of variant/bubble filtering.
                         Only the non-reference alleles that have a size difference <= d% will 
                         go through the annotation step. (default: 10)
-  -m MINCOV, --mincov MINCOV
+  -m  --mincov MINCOV
                         Minimum coverage of inversion signal as fraction of bubble length. 
                         (default: 0.5)
   -k, --keep_files      Keep temporary files after pipeline completion (mostly for debugging 
                         purposes).
-  -t THREADS, --threads THREADS
+  -t  --threads THREADS
                         Number of threads used for parallelization (only for minimap2).
 ```
 
