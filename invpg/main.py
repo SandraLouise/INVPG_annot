@@ -98,7 +98,8 @@ parser_invannot.add_argument(
     "--output_prefix",
     type=str,
     help=HELP_PARAM_OUTPUT,
-)parser_invannot.add_argument(
+)
+parser_invannot.add_argument(
     "-m",
     "--mincov",
     type=float,
