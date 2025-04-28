@@ -11,7 +11,7 @@ HELP_INPUT_FILE_VCF: str = "Path to a VCF file."
 HELP_INPUT_FILE_BED: str = "Path to a BED file, output of the main INVPG_annot pipeline."
 # Parameters help strings
 HELP_PARAM_THREADS: str = "Number of threads used for parallelization (minimap2)."
-HELP_PARAM_PERCENTAGE: str = "This parameter controls the leniency of the algorithm towards allele size difference (in nt) in the first step of variant/bubble filtering. Only the non-reference alleles that have a size difference <= d% will go through the annotation step. (default: 10)"
+HELP_PARAM_PERCENTAGE: str = "This parameter controls the leniency of the algorithm towards allele size difference (in nt) in the first step of variant/bubble filtering. Only the non-reference alleles that have a size difference <= (d * max allele size / 100) will go through the annotation step. (default: 10)"
 HELP_PARAM_MINCOV: str = "Minimum coverage of inversion signal as fraction of bubble length. (default: 0.5)"
 HELP_PARAM_REFID: str = "ID for reference to use in output."
 HELP_PARAM_KEEP: str = "Keep temporary files after pipeline completion (mostly for debugging purposes)."
