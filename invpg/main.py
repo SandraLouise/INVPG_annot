@@ -107,13 +107,6 @@ parser_invannot.add_argument(
     default=DEFAULT_MINCOV,
 )
 parser_invannot.add_argument(
-    "-m",
-    "--mincov",
-    type=float,
-    help=HELP_PARAM_MINCOV,
-    default=DEFAULT_MINCOV,
-)
-parser_invannot.add_argument(
     "-t",
     "--threads",
     type=int,
