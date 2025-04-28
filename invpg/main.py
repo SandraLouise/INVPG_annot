@@ -52,6 +52,13 @@ parser.add_argument(
     default=DEFAULT_PERCENTAGE,
 )
 parser.add_argument(
+    "-m",
+    "--mincov",
+    type=float,
+    help=HELP_PARAM_MINCOV,
+    default=DEFAULT_MINCOV,
+)
+parser.add_argument(
     "-k",
     "--keep_files",
     help=HELP_PARAM_KEEP,
@@ -64,13 +71,6 @@ parser.add_argument(
     type=int,
     help=HELP_PARAM_THREADS,
     default=DEFAULT_THREADS,
-)
-parser.add_argument(
-    "-m",
-    "--mincov",
-    type=float,
-    help=HELP_PARAM_MINCOV,
-    default=DEFAULT_MINCOV,
 )
 
 ########################
@@ -98,13 +98,12 @@ parser_invannot.add_argument(
     "--output_prefix",
     type=str,
     help=HELP_PARAM_OUTPUT,
-)
-parser_invannot.add_argument(
-    "-t",
-    "--threads",
-    type=int,
-    help=HELP_PARAM_THREADS,
-    default=DEFAULT_THREADS,
+)parser_invannot.add_argument(
+    "-m",
+    "--mincov",
+    type=float,
+    help=HELP_PARAM_MINCOV,
+    default=DEFAULT_MINCOV,
 )
 parser_invannot.add_argument(
     "-m",
@@ -112,6 +111,13 @@ parser_invannot.add_argument(
     type=float,
     help=HELP_PARAM_MINCOV,
     default=DEFAULT_MINCOV,
+)
+parser_invannot.add_argument(
+    "-t",
+    "--threads",
+    type=int,
+    help=HELP_PARAM_THREADS,
+    default=DEFAULT_THREADS,
 )
 
 ## Subparser for filtervcf ##
