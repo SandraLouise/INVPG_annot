@@ -202,7 +202,7 @@ def variant_filter(
 
                 parsed_line: dict[str, Any] = parse_vcf_line(line)
 
-                if parsed_line["ref_len"] <= min_len and all([alt <= min_len for alt in parsed_line["alt_len"]]):
+                if parsed_line["ref_len"] < min_len and all([alt < min_len for alt in parsed_line["alt_len"]]):
                     continue
 
                 i_bal: list[str] = list()
