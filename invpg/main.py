@@ -174,7 +174,7 @@ def main() -> None:
     # This timestamp helps identify temporary files of this run (for deletion later on)
     ts = datetime.now()
     print(f"Starting job @{str(ts)}")
-    timestamp: str = str(ts).replace(' ', '_')
+    timestamp: str = str(ts).replace(' ', '_').replace(':', '')
     match args.subcommands:
         case 'annot':
             invannot(

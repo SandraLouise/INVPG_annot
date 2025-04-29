@@ -407,7 +407,7 @@ def invannot(
                 are_INV: list = [None] * n_a1
 
                 # For potential alignment
-                a0Fasta: str = f"{temp_folder}{timestamp}{chrom}.{pos}.a0.fa"
+                a0Fasta: str = f"{temp_folder}{timestamp}_{chrom}.{pos}.a0.fa"
                 write_fasta(a0Fasta, "a0", a0Seq)
 
                 # ---------------------------------------------------
@@ -455,11 +455,11 @@ def invannot(
                         # a1Seq = a1Seqs[i-1]
                         a1Seq = get_allele_seq(a1Walk, d_nodes)
 
-                        a1Fasta = f"{temp_folder}{timestamp}{chrom}.{pos}.a{str(i+1)}.fa"
+                        a1Fasta = f"{temp_folder}{timestamp}_{chrom}.{pos}.a{str(i+1)}.fa"
                         write_fasta(a1Fasta, "a1", a1Seq)
 
                         # Run minimap2
-                        alnPAF: str = f"{temp_folder}{timestamp}{chrom}.{pos}.a{str(i+1)}.paf"
+                        alnPAF: str = f"{temp_folder}{timestamp}_{chrom}.{pos}.a{str(i+1)}.paf"
                         run(
                             f"minimap2 -cx asm20 --cs -r2k -t {threads} {a0Fasta} {a1Fasta} 1> {alnPAF} 2> /dev/null ",
                             shell=True,

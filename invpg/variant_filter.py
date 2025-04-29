@@ -212,7 +212,7 @@ def variant_filter(
 
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
-    with open(outVCF := f"{temp_folder}{timestamp}.balancedSV.vcf", 'w', encoding='utf-8') as out_vcf_balanced:
+    with open(outVCF := f"{temp_folder}{timestamp}_balancedSV.vcf", 'w', encoding='utf-8') as out_vcf_balanced:
         with open(in_vcf, 'r', encoding='utf-8') as file:
             for line in file:
 
