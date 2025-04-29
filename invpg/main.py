@@ -27,8 +27,6 @@ from os import listdir, remove
 from datetime import datetime
 from invpg.inv_annot import invannot
 from invpg.variant_filter import variant_filter
-from invpg.rescue_1node_inv import search_bed
-from invpg.filter_annot import filterannot
 
 parser: ArgumentParser = ArgumentParser(
     description=SOFT_DESCRIPTION,
@@ -159,58 +157,6 @@ parser_filtervcf.add_argument(
     default=DEFAULT_PERCENTAGE,
 )
 
-## Subparser for rescue (DEPRECATED) ##
-
-parser_rescueinv: ArgumentParser = subparsers.add_parser(
-    'rescue',
-    description=HELP_COMMAND_RESCUEINV,
-)
-parser_rescueinv.add_argument(
-    "-o",
-    "--output_prefix",
-    type=str,
-    help=HELP_PARAM_OUTPUT,
-)
-parser_rescueinv.add_argument(
-    "-b",
-    "--input_bed_file",
-    type=str,
-    help=HELP_INPUT_FILE_BED,
-)
-
-## Subparser for filtannot (DEPRECATED) ##
-
-parser_filtannot: ArgumentParser = subparsers.add_parser(
-    'filtannot',
-    description=HELP_COMMAND_FILTANNOT,
-)
-parser_filtannot.add_argument(
-    "-b",
-    "--input_bed_file",
-    type=str,
-    help=HELP_INPUT_FILE_BED,
-)
-parser_filtannot.add_argument(
-    "-r",
-    "--reference_name",
-    type=str,
-    help=HELP_PARAM_REFID,
-)
-parser_filtannot.add_argument(
-    "-o",
-    "--output_prefix",
-    type=str,
-    help=HELP_PARAM_OUTPUT,
-)
-parser_filtannot.add_argument(
-    "-m",
-    "--mincov",
-    type=float,
-    help=HELP_PARAM_MINCOV,
-    default=DEFAULT_MINCOV,
-)
-
-
 #######################################
 args = parser.parse_args()
 #######################################
@@ -244,22 +190,6 @@ def main() -> None:
             filter(
                 in_vcf=args.input_vcf_file,
                 div_pct=args.div_percentage,
-                output_prefix=args.output_prefix,
-                timestamp=timestamp,
-            )
-        case 'rescue':
-            # DEPRECATED
-            search_bed(
-                in_file=args.input_gfa_file,
-                output_prefix=args.output_prefix,
-                timestamp=timestamp,
-            )
-        case 'filtannot':
-            # DEPRECATED
-            filterannot(
-                input_annotation_file=args.input_bed_file,
-                reference_name=args.reference_name,
-                minimum_coverage=args.mincov,
                 output_prefix=args.output_prefix,
                 timestamp=timestamp,
             )
