@@ -11,7 +11,7 @@ HELP_PARAM_THREADS: str = "Number of threads used for parallelization (minimap2)
 HELP_PARAM_PERCENTAGE: str = "This parameter controls the leniency of the algorithm towards allele size difference (in nt) in the first step of variant/bubble filtering. Only the non-reference alleles that have a size difference <= (d * max allele size / 100) will go through the annotation step. (default: 10)"
 HELP_PARAM_MINCOV: str = "Minimum coverage of inversion signal as fraction of bubble length. (default: 0.5)"
 HELP_PARAM_KEEP: str = "Keep temporary files after pipeline completion (mostly for debugging purposes)."
-HELP_PARAM_OUTPUT_MAIN: str = "Name of output BED file (without file extension). Can be a path to control output directory."
+HELP_PARAM_OUTPUT_MAIN: str = "Name/path of output BED file. If parent folder of output BED file doesn't already exist, it will be created."
 HELP_PARAM_OUTPUT: str = "Output path."
 # Default value for parameters
 DEFAULT_PERCENTAGE: int = 10

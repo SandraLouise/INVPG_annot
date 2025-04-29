@@ -202,17 +202,19 @@ def variant_filter(
     min_len: int = 50
     f_INFO: int = 7
 
-    # Path for temporary files
+    # Managing output folders
     if '/' not in output_prefix:
-        temp_folder = './'
+        output_folder = './'
     else:
-        temp_folder = '/'.join(
+        output_folder = '/'.join(
             [x for x in output_prefix.split('/')][:-1]
         ) + '/'
+    Path(output_folder).mkdir(parents=True, exist_ok=True)
 
+    temp_folder = f"{output_folder}res_{timestamp}/"
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
-    with open(outVCF := f"{temp_folder}{timestamp}_balancedSV.vcf", 'w', encoding='utf-8') as out_vcf_balanced:
+    with open(outVCF := f"{temp_folder}balanced_svs.vcf", 'w', encoding='utf-8') as out_vcf_balanced:
         with open(in_vcf, 'r', encoding='utf-8') as file:
             for line in file:
 

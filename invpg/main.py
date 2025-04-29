@@ -24,6 +24,7 @@ from pathlib import Path
 from argparse import ArgumentParser
 from sys import argv
 from os import listdir, remove
+from shutil import rmtree
 from datetime import datetime
 from invpg.inv_annot import invannot
 from invpg.variant_filter import variant_filter
@@ -175,12 +176,13 @@ def main() -> None:
     ts = datetime.now()
     print(f"Starting job @{str(ts)}")
     timestamp: str = str(ts).replace(' ', '_').replace(':', '')
+
     match args.subcommands:
         case 'annot':
             invannot(
                 gfa_file=args.input_gfa_file,
                 vcf_file=args.input_vcf_file,
-                temp_folder=f"tmp_{Path(args.gfa_file).stem}/",
+                # temp_folder=f"tmp_{Path(args.gfa_file).stem}/",
                 mincov=args.mincov,
                 threads=args.threads,
                 output_prefix=args.output_prefix,
@@ -216,14 +218,14 @@ def main() -> None:
                 threads=args.threads,
             )
             print("[" + str(datetime.now()) + "] DONE!")
+            
             if not args.keep_files:
                 if '/' not in args.output_prefix:
-                    temp_folder = './'
+                    temp_folder = f'./res_{timestamp}/'
                 else:
                     temp_folder = '/'.join(
                         [x for x in args.output_prefix.split('/')][:-1]
-                    ) + '/'
-                for file_name in listdir(temp_folder):
-                    if file_name.startswith(timestamp):
-                        remove(f"{temp_folder}{file_name}")
+                    ) + f'/res_{timestamp}/'
+                rmtree(temp_folder)
+
     exit(0)

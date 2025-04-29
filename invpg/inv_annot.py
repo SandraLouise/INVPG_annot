@@ -370,17 +370,19 @@ def invannot(
     else:
         output_bed_file = output_prefix
 
-    # Path for temporary files
+    # Managing output folders
     if '/' not in output_prefix:
-        temp_folder = './'
+        output_folder = './'
     else:
-        temp_folder = '/'.join(
+        output_folder = '/'.join(
             [x for x in output_prefix.split('/')][:-1]
         ) + '/'
+    Path(output_folder).mkdir(parents=True, exist_ok=True)
 
+    temp_folder = f"{output_folder}res_{timestamp}/"
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
-    bubble_count: int = 0
+    inversion_count: int = 0
 
     with open(output_bed_file, 'w', encoding='utf-8') as output_bed_file:
         with open(vcf_file, 'r', encoding='utf-8') as input_vcf_file:
@@ -393,7 +395,6 @@ def invannot(
                 # Retrieve coordinates of bubble
                 # ---------------------------------------------------
                 chrom, pos = line.split("\t")[0:2]
-                bubble_count += 1
                 # ---------------------------------------------------
                 # Retrieve allele paths and sequences from line
                 # ---------------------------------------------------
@@ -407,7 +408,7 @@ def invannot(
                 are_INV: list = [None] * n_a1
 
                 # For potential alignment
-                a0Fasta: str = f"{temp_folder}{timestamp}_{chrom}.{pos}.a0.fa"
+                a0Fasta: str = f"{temp_folder}{chrom}.{pos}.a0.fa"
                 write_fasta(a0Fasta, "a0", a0Seq)
 
                 # ---------------------------------------------------
@@ -455,11 +456,11 @@ def invannot(
                         # a1Seq = a1Seqs[i-1]
                         a1Seq = get_allele_seq(a1Walk, d_nodes)
 
-                        a1Fasta = f"{temp_folder}{timestamp}_{chrom}.{pos}.a{str(i+1)}.fa"
+                        a1Fasta = f"{temp_folder}{chrom}.{pos}.a{str(i+1)}.fa"
                         write_fasta(a1Fasta, "a1", a1Seq)
 
                         # Run minimap2
-                        alnPAF: str = f"{temp_folder}{timestamp}_{chrom}.{pos}.a{str(i+1)}.paf"
+                        alnPAF: str = f"{temp_folder}{chrom}.{pos}.a{str(i+1)}.paf"
                         run(
                             f"minimap2 -cx asm20 --cs -r2k -t {threads} {a0Fasta} {a1Fasta} 1> {alnPAF} 2> /dev/null ",
                             shell=True,
@@ -499,4 +500,7 @@ def invannot(
                             )
                         ]) + "\n"
                     )
-            print("Total number of bubbles: " + str(bubble_count))
+
+                    inversion_count += 1
+
+            print("Inversion annotated bubbles: " + str(inversion_count))
