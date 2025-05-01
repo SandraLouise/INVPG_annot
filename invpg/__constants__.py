@@ -17,3 +17,5 @@ HELP_PARAM_OUTPUT: str = "Output path."
 DEFAULT_PERCENTAGE: int = 10
 DEFAULT_MINCOV: float = .5
 DEFAULT_THREADS: int = 1
+DEFAULT_OUTPUT_MAIN:str = "invpg"
+DEFAULT_OUTPUT:str = "invpg"

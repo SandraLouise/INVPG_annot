@@ -62,6 +62,7 @@ parser.add_argument(
     "--output_prefix",
     type=str,
     help=HELP_PARAM_OUTPUT_MAIN,
+    default=DEFAULT_OUTPUT_MAIN,
 )
 parser.add_argument(
     "-d",
@@ -117,6 +118,7 @@ parser_invannot.add_argument(
     "--output_prefix",
     type=str,
     help=HELP_PARAM_OUTPUT,
+    default=DEFAULT_OUTPUT,
 )
 parser_invannot.add_argument(
     "-m",
@@ -149,6 +151,7 @@ parser_filtervcf.add_argument(
     "--output_prefix",
     type=str,
     help=HELP_PARAM_OUTPUT,
+    default=DEFAULT_OUTPUT,
 )
 parser_filtervcf.add_argument(
     "-d",
