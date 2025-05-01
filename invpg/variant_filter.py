@@ -197,6 +197,7 @@ def variant_filter(
     str
         Path to the balanced SV VCF file.
     """
+    count_input_entries: int = 0
     count_BL_entries: int = 0
     div: float = float(div_pct) / 100
     min_len: int = 50
@@ -214,6 +215,8 @@ def variant_filter(
     temp_folder = f"{output_folder}res_{timestamp}/"
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
+    output_stats = output_prefix.replace(".bed", "") + ".stats"
+
     with open(outVCF := f"{temp_folder}balanced_svs.vcf", 'w', encoding='utf-8') as out_vcf_balanced:
         with open(in_vcf, 'r', encoding='utf-8') as file:
             for line in file:
@@ -222,6 +225,7 @@ def variant_filter(
                     out_vcf_balanced.write(line)
                     continue
 
+                count_input_entries += 1
                 parsed_line: dict[str, Any] = parse_vcf_line(line)
 
                 if parsed_line["ref_len"] < min_len and all([alt < min_len for alt in parsed_line["alt_len"]]):
@@ -255,5 +259,9 @@ def variant_filter(
 
                     count_BL_entries += 1
 
-    print(f"Balanced variants entries: {str(count_BL_entries)}")
+    print(f"Bubbles after filtering: {str(count_BL_entries)}")
+    with open(output_stats, "w") as stats:
+        stats.write("\t".join(["Total input bubbles", str(count_input_entries)]) + "\n")
+        stats.write("\t".join(["Large bubbles", str(count_BL_entries)]) + "\n")
+
     return outVCF

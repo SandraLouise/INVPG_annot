@@ -343,7 +343,7 @@ def invannot(
     mincov: float,
     threads: int,
 ) -> None:
-    """Loops over all the bed lines, iterating to analyse and reconver inversions.
+    """Loops over all the bed lines, iterating to analyse and recover inversions.
 
     Parameters
     ----------
@@ -382,7 +382,11 @@ def invannot(
     temp_folder = f"{output_folder}res_{timestamp}/"
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
+    # Annotation statistics
+    output_stats = output_prefix.replace(".bed", "") + ".stats"
     inversion_count: int = 0
+    path_explicit_count: int = 0
+    aln_rescued_count: int = 0
 
     with open(output_bed_file, 'w', encoding='utf-8') as output_bed_file:
         with open(vcf_file, 'r', encoding='utf-8') as input_vcf_file:
@@ -447,6 +451,7 @@ def invannot(
                     if path_coverage >= mincov:
                         are_INV[i-1] = (True, "path", ",".join([str(path_coverage),
                                         str(len(rev_nodes))]), str(len(a1Walk)-len(rev_nodes)))
+                        path_explicit_count += 1
 
                     # -----------------------------------------------
                     # Check for pattern in alignment
@@ -476,6 +481,7 @@ def invannot(
                         if aln_coverage >= mincov:
                             are_INV[i-1] = (True, "aln", ",".join([str(aln_coverage), str(
                                 n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
+                            aln_rescued_count += 1
                         else:
                             are_INV[i-1] = (False, ".")
 
@@ -504,3 +510,7 @@ def invannot(
                     inversion_count += 1
 
             print("Inversion annotated bubbles: " + str(inversion_count))
+            with open(output_stats, "a") as stats:
+                stats.write("\t".join(["Inversion bubbles", str(inversion_count)]) + "\n")
+                stats.write("\t".join(["Path-explicit annotations", str(path_explicit_count)]) + "\n")
+                stats.write("\t".join(["Alignment-rescued annotations", str(aln_rescued_count)]) + "\n")
