@@ -261,7 +261,7 @@ def variant_filter(
 
     print(f"Bubbles after filtering: {str(count_BL_entries)}")
     with open(output_stats, "w") as stats:
-        stats.write("\t".join(["Total input bubbles", str(count_input_entries)]) + "\n")
-        stats.write("\t".join(["Large bubbles", str(count_BL_entries)]) + "\n")
+        stats.write("\t".join(["Total_bubbles", str(count_input_entries)]) + "\n")
+        stats.write("\t".join(["Large_bubbles", str(count_BL_entries)]) + "\n")
 
     return outVCF

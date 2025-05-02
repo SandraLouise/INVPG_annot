@@ -511,6 +511,6 @@ def invannot(
 
             print("Inversion annotated bubbles: " + str(inversion_count))
             with open(output_stats, "a") as stats:
-                stats.write("\t".join(["Inversion bubbles", str(inversion_count)]) + "\n")
-                stats.write("\t".join(["Path-explicit annotations", str(path_explicit_count)]) + "\n")
-                stats.write("\t".join(["Alignment-rescued annotations", str(aln_rescued_count)]) + "\n")
+                stats.write("\t".join(["Inversion_bubbles", str(inversion_count)]) + "\n")
+                stats.write("\t".join(["Path-explicit", str(path_explicit_count)]) + "\n")
+                stats.write("\t".join(["Alignment-rescued", str(aln_rescued_count)]) + "\n")
