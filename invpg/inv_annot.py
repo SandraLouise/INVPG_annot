@@ -467,7 +467,7 @@ def invannot(
                         # Run minimap2
                         alnPAF: str = f"{temp_folder}{chrom}.{pos}.a{str(i+1)}.paf"
                         run(
-                            f"minimap2 -cx asm20 --cs -r2k -t {threads} {a0Fasta} {a1Fasta} 1> {alnPAF} 2> /dev/null ",
+                            f"minimap2 --cs -t --secondary=no {threads} {a0Fasta} {a1Fasta} 1> {alnPAF} 2> /dev/null ",
                             shell=True,
                         )
 
