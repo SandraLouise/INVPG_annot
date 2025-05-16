@@ -1,0 +1,4 @@
+path1	101	152	INV:path:1.0,3:0
+path1	253	302	INV:path:1.0,1:0
+path1	403	452	INV:aln:1.0,1:0.0,0
+path1	553	602	INV:path:1.0,1:0;INV:aln:1.0,1:0.0,0
