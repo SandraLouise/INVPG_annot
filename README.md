@@ -50,10 +50,23 @@ A tool to annotate inversions from pangenome graph bubbles.
                         Number of threads used for parallelization (only for minimap2).
 ```
 
-Example command line:
+### Test with a small dataset
+
+To check that INVPG-annot behaves as expected on your device, you can run:
 
 ```bash
-invpg -v bubbles.vcf -g graph.gfa -d 10 -t 8 -m 0.5
+cd test-dir/
+invpg -v test_bubbles.vcf -g test_graph.gfa -o test_annotation.bed -m 0.5 -d 10
+diff expected_annotation.bed test_annotation.bed
+```
+
+To explore the intermediate output files (described [here](https://github.com/SandraLouise/INVPG_annot?tab=readme-ov-file#intermediate-files-when-using--k-parameter)) on a small dataset, run:
+
+```bash
+mkdir outputfiles
+cd outputfiles
+invpg -v ../test_bubbles.vcf -g ../test_graph.gfa -o test_annotation.bed -k -m 0.5 -d 10
+cd res_*
 ```
 
 ### Impact of the `-d` and `-m` parameters
