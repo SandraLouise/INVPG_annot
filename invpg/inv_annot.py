@@ -324,7 +324,8 @@ def reverse_complement(seq: str) -> str:
         "A": "T",
         "C": "G",
         "T": "A",
-        "G": "C"
+        "G": "C",
+        "N": "N"
     }
 
     revcomp: str = ""
