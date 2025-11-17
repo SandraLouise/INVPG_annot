@@ -92,6 +92,13 @@ parser.add_argument(
     help=HELP_PARAM_THREADS,
     default=DEFAULT_THREADS,
 )
+parser.add_argument(
+    "-o",
+    "--output_vcf_file",
+    type=str,
+    help=HELP_OUTPUT_FILE_VCF,
+    default=DEFAULT_OUTPUT_VCF,
+)
 
 ########################
 ## INDIVIDUAL PARSERS ##
