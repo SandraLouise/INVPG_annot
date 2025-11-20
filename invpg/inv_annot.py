@@ -526,7 +526,7 @@ def invannot(
                         # We ignore the BL field in output
                         annot:str = ','.join(b[1] for b in are_INV)
                         cov:str = ','.join(b[2].split(',')[0] if b[0] else '.' for b in are_INV)
-                        svtype:str = 'inv' if any([b[0] for b in are_INV]) else '.'
+                        svtype:str = 'INV' if any([b[0] for b in are_INV]) else 'NA'
                         output_vcf_file.write(
                             '\t'.join(
                                 [
