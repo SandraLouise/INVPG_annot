@@ -25,29 +25,26 @@ python -m pip install . --quiet
 You can use a single command to execute the whole pipeline or do a step-by-step analysis (see below).
 
 ```bash
-usage: invpg [-h] -v INPUT_VCF_FILE -g INPUT_GFA_FILE [-o OUTPUT_PREFIX] [-d DIV_PERCENTAGE] [-m MINCOV] [-k] [-t THREADS]
+usage: invpg [-h] [-v INPUT_VCF_FILE] [-g INPUT_GFA_FILE] [-o OUTPUT_PREFIX] [-d DIV_PERCENTAGE] [-m MINCOV] [-k] [-t THREADS] [-O OUTPUT_VCF_FILE]
 
 A tool to annotate inversions from pangenome graph bubbles.
   -h, --help            show this help message and exit
-  -v  --input_vcf_file INPUT_VCF_FILE
+  -v, --input_vcf_file INPUT_VCF_FILE
                         Path to a VCF file.
-  -g  --input_gfa_file INPUT_GFA_FILE
-                        Path to a GFA-like file.
+  -g, --input_gfa_file INPUT_GFA_FILE
+                        Path to a GFA-like file. Should be provided solely when not using minigraph graphs.
   -o, --output_prefix OUTPUT_PREFIX
-                        Name of output BED file (without file extension). Can be a path to 
-                        control output directory.
-  -d  --div_percentage DIV_PERCENTAGE 
-                        This parameter controls the leniency of the algorithm towards allele 
-                        size difference (in nt) in the first step of variant/bubble filtering.
-                        Only the non-reference alleles that have a size difference <= d% will 
-                        go through the annotation step. (default: 10)
-  -m  --mincov MINCOV
-                        Minimum coverage of inversion signal as fraction of bubble length. 
-                        (default: 0.5)
-  -k, --keep_files      Keep temporary files after pipeline completion (mostly for debugging 
-                        purposes).
-  -t  --threads THREADS
-                        Number of threads used for parallelization (only for minimap2).
+                        Name/path of output BED file. If parent folder of output BED file doesn't already exist, it will be created.
+  -d, --div_percentage DIV_PERCENTAGE
+                        This parameter controls the leniency of the algorithm towards allele size difference (in nt) in the first step of variant/bubble
+                        filtering. Only the non-reference alleles that have a size difference <= (d * max allele size / 100) will go through the annotation
+                        step. (default: 10)
+  -m, --mincov MINCOV   Minimum coverage of inversion signal as fraction of bubble length. (default: 0.5)
+  -k, --keep_files      Keep temporary files after pipeline completion (mostly for debugging purposes).
+  -t, --threads THREADS
+                        Number of threads used for parallelization (minimap2).
+  -O, --output_vcf_file OUTPUT_VCF_FILE
+                        Output path for vcf output.
 ```
 
 ### Test with a small dataset
