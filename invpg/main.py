@@ -93,7 +93,7 @@ parser.add_argument(
     default=DEFAULT_THREADS,
 )
 parser.add_argument(
-    "-o",
+    "-O",
     "--output_vcf_file",
     type=str,
     help=HELP_OUTPUT_FILE_VCF,
@@ -140,6 +140,13 @@ parser_invannot.add_argument(
     type=int,
     help=HELP_PARAM_THREADS,
     default=DEFAULT_THREADS,
+)
+parser_invannot.add_argument(
+    "-O",
+    "--output_vcf_file",
+    type=str,
+    help=HELP_OUTPUT_FILE_VCF,
+    default=DEFAULT_OUTPUT_VCF,
 )
 
 ## Subparser for filtervcf ##
@@ -192,11 +199,11 @@ def main() -> None:
             invannot(
                 gfa_file=args.input_gfa_file,
                 vcf_file=args.input_vcf_file,
-                # temp_folder=f"tmp_{Path(args.gfa_file).stem}/",
-                mincov=args.mincov,
-                threads=args.threads,
+                out_vcf=args.output_vcf_file,
                 output_prefix=args.output_prefix,
                 timestamp=timestamp,
+                mincov=args.mincov,
+                threads=args.threads,
             )
         case 'filtvcf':
             filter(
@@ -222,6 +229,7 @@ def main() -> None:
             invannot(
                 gfa_file=args.input_gfa_file,
                 vcf_file=temp_output_vcf,
+                out_vcf=args.output_vcf_file,
                 output_prefix=args.output_prefix,
                 timestamp=timestamp,
                 mincov=args.mincov,
