@@ -25,7 +25,7 @@ python -m pip install . --quiet
 
 You can use a single command to execute the whole pipeline or do a step-by-step analysis (see [Steps](docs/steps.md)).
 
-```bash
+```text
 usage: invpg [-h] [-v INPUT_VCF_FILE] [-g INPUT_GFA_FILE] [-o OUTPUT_PREFIX] [-d DIV_PERCENTAGE] [-m MINCOV] [-k] [-t THREADS] [-O OUTPUT_VCF_FILE]
 
 A tool to annotate inversions from pangenome graph bubbles.
