@@ -1,0 +1,18 @@
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=INVANNOT,Number=A,Type=String,Description="Source of inversion annotation (PATH=path-explicit,ALN=alignment-rescued,NOINV=insufficient inversion signal,NA=not tested)">
+##INFO=<ID=INVCOV,Number=A,Type=Float,Description="Inversion signal coverage">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of SV">
+##INFO=<ID=CONFLICT,Number=.,Type=String,Description="Sample names for which there are multiple paths in the graph with conflicting alleles">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Total number of alternate alleles in called genotypes">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Estimated allele frequency in the range (0,1]">
+##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=LV,Number=1,Type=Integer,Description="Level in the snarl tree (0=top level)">
+##INFO=<ID=PS,Number=1,Type=String,Description="ID of variant corresponding to parent snarl">
+##INFO=<ID=AT,Number=R,Type=String,Description="Allele Traversal as path in graph">
+##contig=<ID=path1,length=702>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	path2	path3
+path1	101	>1>4	CATGTCGTTGTGTAGAATCAAACCACCCGACGTTCACTAATGGCACATAATG	CATTATGTGCCATTAGTGAACGTCGGGTGGTTTGATTCTACACAACGACATG	60	.	INVANNOT=PATH;INVCOV=1.0;SVTYPE=INV;AC=1;AF=0.5;AN=2;AT=>1>2>3<2>4,>1>2<3<2>4;NS=2;LV=0	GT	1	0
+path1	253	>4>6	GTATAGGAGTGCGCTGGGTTCATGCGGTAGTCGCTTTTTACACGGCGGGA	TCCCGCCGTGTAAAAAGCGACTACCGCATGAACCCAGCGCACTCCTATAC	60	.	INVANNOT=PATH;INVCOV=1.0;SVTYPE=INV;AC=2;AF=1;AN=2;AT=>4>5>6,>4<5>6;NS=2;LV=0	GT	1	1
+path1	553	>9>12	ATGAAGGAACCTACAGCGGGTGTAACCTACCCACAGGGTACTTGACTCGA	TCGAGTCAAGTACCCTGTGGGTAGGTTACACCCGCTGTAGGTTCCTTCAT,TCGAGTCAAGTACCCTGTGGGTAGGTTACACCCGCTGTAGGTTCCTTCAT	60	.	INVANNOT=PATH,NOINV;INVCOV=1.0,.;SVTYPE=INV;AC=2;AF=1;AN=2;AT=>9>10>12,>9<10>12,>9>11>12;NS=2;LV=0	GT	1	2
