@@ -464,7 +464,7 @@ def invannot(
                             path_coverage: float = float(len_rev)/float(len(a0Seq))
 
                         if path_coverage >= mincov:
-                            are_INV[i-1] = (True, "path", ",".join([str(path_coverage),
+                            are_INV[i-1] = (True, "PATH", ",".join([str(path_coverage),
                                             str(len(rev_nodes))]), str(len(a1Walk)-len(rev_nodes)))
                             path_explicit_count += 1
 
@@ -494,16 +494,16 @@ def invannot(
                                 aln_coverage = float(frac_rev)
 
                             if aln_coverage >= mincov:
-                                are_INV[i-1] = (True, "aln", ",".join([str(aln_coverage), str(
+                                are_INV[i-1] = (True, "ALN", ",".join([str(aln_coverage), str(
                                     n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
                                 aln_rescued_count += 1
                             else: #NOINV (insufficient signal)
-                                are_INV[i-1] = (False, "noinv") 
+                                are_INV[i-1] = (False, "NOINV") 
 
                     for i in range(len(are_INV)):
 
                         if are_INV[i] == None: #NA (not tested)
-                            are_INV[i] = (False, "na")
+                            are_INV[i] = (False, "NA")
 
                     # ---------------------------------------------------
                     # Output results
