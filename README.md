@@ -35,7 +35,7 @@ A tool to annotate inversions from pangenome graph bubbles.
   -g, --input_gfa_file INPUT_GFA_FILE
                         Path to a GFA-like file. Should be provided solely when not using minigraph graphs.
   -o, --output_prefix OUTPUT_PREFIX
-                        Name/path of output BED file. If parent folder of output BED file doesn't already exist, it will be created.
+                        Name/path of output VCF file. If parent folder of output VCF file doesn't already exist, it will be created.
   -d, --div_percentage DIV_PERCENTAGE
                         This parameter controls the leniency of the algorithm towards allele size difference (in nt) in the first step of variant/bubble
                         filtering. Only the non-reference alleles that have a size difference <= (d * max allele size / 100) will go through the annotation
@@ -44,8 +44,6 @@ A tool to annotate inversions from pangenome graph bubbles.
   -k, --keep_files      Keep temporary files after pipeline completion (mostly for debugging purposes).
   -t, --threads THREADS
                         Number of threads used for parallelization (minimap2).
-  -O, --output_vcf_file OUTPUT_VCF_FILE
-                        Output path for vcf output.
 ```
 
 ### Test with a small dataset
