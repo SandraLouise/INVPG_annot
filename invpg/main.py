@@ -134,13 +134,6 @@ parser_invannot.add_argument(
     help=HELP_PARAM_THREADS,
     default=DEFAULT_THREADS,
 )
-parser_invannot.add_argument(
-    "-O",
-    "--output_vcf_file",
-    type=str,
-    help=HELP_OUTPUT_FILE_VCF,
-    default=DEFAULT_OUTPUT_VCF,
-)
 
 ## Subparser for filtervcf ##
 
@@ -221,7 +214,6 @@ def main() -> None:
             invannot(
                 gfa_file=args.input_gfa_file,
                 vcf_file=temp_output_vcf,
-                out_vcf=args.output_vcf_file,
                 output_prefix=args.output_prefix,
                 timestamp=timestamp,
                 mincov=args.mincov,
