@@ -344,7 +344,7 @@ def invannot(
     mincov: float,
     threads: int,
 ) -> None:
-    """Loops over all the bed lines, iterating to analyse and recover inversions.
+    """Loops over all the vcf lines, iterating to analyse and recover inversions.
 
     Parameters
     ----------
@@ -355,7 +355,7 @@ def invannot(
     out_vcf : str
         Path to a .vcf output file
     output_prefix : str
-        Path to a .bed output file
+        Path to a .vcf output file
     mincov : float
         Minimum coverage
     threads : int
