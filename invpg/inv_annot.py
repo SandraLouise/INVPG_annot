@@ -339,7 +339,6 @@ def reverse_complement(seq: str) -> str:
 def invannot(
     gfa_file: str,
     vcf_file: str,
-    out_vcf: str,
     output_prefix: str,
     timestamp: str,
     mincov: float,
@@ -369,10 +368,10 @@ def invannot(
                 d_nodes = index_node_seq(d_nodes, line)
 
     # Defining output path
-    if not output_prefix.endswith('.bed'):
-        output_bed_file = output_prefix + '.bed'
+    if not output_prefix.endswith('.vcf'):
+        output_vcf_file = output_prefix + '.vcf'
     else:
-        output_bed_file = output_prefix
+        output_vcf_file = output_prefix
 
     # Managing output folders
     if '/' not in output_prefix:
@@ -387,159 +386,146 @@ def invannot(
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
     # Annotation statistics
-    output_stats = output_prefix.replace(".bed", "") + ".stats"
+    output_stats = output_prefix.replace(".vcf", "") + ".stats"
     inversion_count: int = 0
     path_explicit_count: int = 0
     aln_rescued_count: int = 0
 
-    with open(output_bed_file, 'w', encoding='utf-8') as output_bed_file:
+    with open(output_vcf_file, 'w', encoding='utf-8') as output_vcf_file:
         with open(vcf_file, 'r', encoding='utf-8') as input_vcf_file:
             comment_lines:int = 0
-            with open(out_vcf,'w',encoding='utf-8') as output_vcf_file:
-                for line in input_vcf_file:
+            for line in input_vcf_file:
 
-                    # ---------------------------------------------------
-                    # Write comments in output VCF file
-                    # ---------------------------------------------------
-                    if line[0] == "#":
-                        comment_lines += 1
-                        output_vcf_file.write(line.strip()+'\n')
-                        if comment_lines == 2:
-                            output_vcf_file.write("##INFO=<ID=INVANNOT,Number=A,Type=String,Description=\"Source of inversion annotation (PATH=path-explicit,ALN=alignment-rescued,NOINV=insufficient inversion signal,NA=not tested)\">"+'\n')
-                            output_vcf_file.write("##INFO=<ID=INVCOV,Number=A,Type=Float,Description=\"Inversion signal coverage\">"+'\n')
-                            output_vcf_file.write("##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of SV\">"+'\n')
-                        continue
+                # ---------------------------------------------------
+                # Write comments in output VCF file
+                # ---------------------------------------------------
+                if line[0] == "#":
+                    comment_lines += 1
+                    output_vcf_file.write(line.strip()+'\n')
+                    if comment_lines == 2:
+                        output_vcf_file.write("##INFO=<ID=INVANNOT,Number=A,Type=String,Description=\"Source of inversion annotation (PATH=path-explicit,ALN=alignment-rescued,NOINV=insufficient inversion signal,NA=not tested)\">"+'\n')
+                        output_vcf_file.write("##INFO=<ID=INVCOV,Number=A,Type=Float,Description=\"Inversion signal coverage\">"+'\n')
+                        output_vcf_file.write("##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of SV\">"+'\n')
+                    continue
 
-                    # ---------------------------------------------------
-                    # Retrieve coordinates of bubble
-                    # ---------------------------------------------------
-                    chrom, pos = line.split("\t")[0:2]
-                    # ---------------------------------------------------
-                    # Retrieve allele paths and sequences from line
-                    # ---------------------------------------------------
-                    info: str = line.split("\t")[7]
-                    aWalks: list[str] = allele_walk(info)
+                # ---------------------------------------------------
+                # Retrieve coordinates of bubble
+                # ---------------------------------------------------
+                chrom, pos = line.split("\t")[0:2]
+                # ---------------------------------------------------
+                # Retrieve allele paths and sequences from line
+                # ---------------------------------------------------
+                info: str = line.split("\t")[7]
+                aWalks: list[str] = allele_walk(info)
 
-                    a0Walk: list[int] = parse_path(aWalks[0])
-                    a0Seq: str = get_allele_seq(a0Walk, d_nodes)
+                a0Walk: list[int] = parse_path(aWalks[0])
+                a0Seq: str = get_allele_seq(a0Walk, d_nodes)
 
-                    n_a1: int = len(aWalks) - 1
-                    are_INV: list = [None] * n_a1
+                n_a1: int = len(aWalks) - 1
+                are_INV: list = [None] * n_a1
 
-                    # For potential alignment
-                    a0Fasta: str = f"{temp_folder}{chrom}.{pos}.a0.fa"
-                    write_fasta(a0Fasta, "a0", a0Seq)
+                # For potential alignment
+                a0Fasta: str = f"{temp_folder}{chrom}.{pos}.a0.fa"
+                write_fasta(a0Fasta, "a0", a0Seq)
 
-                    # ---------------------------------------------------
-                    # Check if alleles present INV pattern
-                    # ---------------------------------------------------
+                # ---------------------------------------------------
+                # Check if alleles present INV pattern
+                # ---------------------------------------------------
 
-                    # Get balanced a1
-                    f_INFO: str = line.split("\t")[7]
-                    i_bal: list[int] = f_INFO.split(";BL=")[1]
+                # Get balanced a1
+                f_INFO: str = line.split("\t")[7]
+                i_bal: list[int] = f_INFO.split(";BL=")[1]
 
-                    if "," in i_bal:
-                        i_bal: list[int] = list(map(int, i_bal.split(",")))
+                if "," in i_bal:
+                    i_bal: list[int] = list(map(int, i_bal.split(",")))
 
+                else:
+                    i_bal: list[int] = [int(i_bal)]
+
+                for i in i_bal:
+
+                    # -----------------------------------------------
+                    # Check for pattern in path
+                    # -----------------------------------------------
+                    a1Walk = parse_path(aWalks[i])
+
+                    is_inv_fromPath, rev_nodes = is_INV_fromPath(
+                        a0Walk, a1Walk)
+                    path_coverage: float = .0
+
+                    if is_inv_fromPath:
+
+                        len_rev: int = 0
+                        for n in rev_nodes:
+                            len_rev += get_node_len(d_nodes, n)
+
+                        path_coverage: float = float(len_rev)/float(len(a0Seq))
+
+                    if path_coverage >= mincov:
+                        are_INV[i-1] = (True, "PATH", ",".join([str(path_coverage),
+                                        str(len(rev_nodes))]), str(len(a1Walk)-len(rev_nodes)))
+                        path_explicit_count += 1
+
+                    # -----------------------------------------------
+                    # Check for pattern in alignment
+                    # -----------------------------------------------
                     else:
-                        i_bal: list[int] = [int(i_bal)]
 
-                    for i in i_bal:
+                        # a1Seq = a1Seqs[i-1]
+                        a1Seq = get_allele_seq(a1Walk, d_nodes)
 
-                        # -----------------------------------------------
-                        # Check for pattern in path
-                        # -----------------------------------------------
-                        a1Walk = parse_path(aWalks[i])
+                        a1Fasta = f"{temp_folder}{chrom}.{pos}.a{str(i+1)}.fa"
+                        write_fasta(a1Fasta, "a1", a1Seq)
 
-                        is_inv_fromPath, rev_nodes = is_INV_fromPath(
-                            a0Walk, a1Walk)
-                        path_coverage: float = .0
-
-                        if is_inv_fromPath:
-
-                            len_rev: int = 0
-                            for n in rev_nodes:
-                                len_rev += get_node_len(d_nodes, n)
-
-                            path_coverage: float = float(len_rev)/float(len(a0Seq))
-
-                        if path_coverage >= mincov:
-                            are_INV[i-1] = (True, "PATH", ",".join([str(path_coverage),
-                                            str(len(rev_nodes))]), str(len(a1Walk)-len(rev_nodes)))
-                            path_explicit_count += 1
-
-                        # -----------------------------------------------
-                        # Check for pattern in alignment
-                        # -----------------------------------------------
-                        else:
-
-                            # a1Seq = a1Seqs[i-1]
-                            a1Seq = get_allele_seq(a1Walk, d_nodes)
-
-                            a1Fasta = f"{temp_folder}{chrom}.{pos}.a{str(i+1)}.fa"
-                            write_fasta(a1Fasta, "a1", a1Seq)
-
-                            # Run minimap2
-                            alnPAF: str = f"{temp_folder}{chrom}.{pos}.a{str(i+1)}.paf"
-                            run(
-                                f"minimap2 --cs -t --secondary=no -t {threads} {a0Fasta} {a1Fasta} 1> {alnPAF} 2> /dev/null ",
-                                shell=True,
-                            )
-
-                            is_inv_fromAln, frac_rev, n_rev_aln, frac_for, n_for_aln = is_INV_fromAln(
-                                alnPAF)
-                            aln_coverage: float = .0
-
-                            if is_inv_fromAln:
-                                aln_coverage = float(frac_rev)
-
-                            if aln_coverage >= mincov:
-                                are_INV[i-1] = (True, "ALN", ",".join([str(aln_coverage), str(
-                                    n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
-                                aln_rescued_count += 1
-                            else: #NOINV (insufficient signal)
-                                are_INV[i-1] = (False, "NOINV") 
-
-                    for i in range(len(are_INV)):
-
-                        if are_INV[i] == None: #NA (not tested)
-                            are_INV[i] = (False, "NA")
-
-                    # ---------------------------------------------------
-                    # Output results
-                    # ---------------------------------------------------
-                    if any([b[0] for b in are_INV]):
-                        output_bed_file.write(
-                            '\t'.join([
-                                chrom,
-                                pos,
-                                str(int(pos) + len(a0Seq) - 1),
-                                ";".join(
-                                    [
-                                        "INV:" + ":".join(b[1:]) if b[0] else "DIV" for b in are_INV
-                                    ]
-                                )
-                            ]) + "\n"
-                        )
-                        # As we can have multiple statuses for one inversion site, we concatenate them
-                        # We could also set rules to choose annot, cov and svtype values
-                        # We ignore the BL field in output
-                        annot:str = ','.join(b[1] for b in are_INV)
-                        cov:str = ','.join(b[2].split(',')[0] if b[0] else '.' for b in are_INV)
-                        svtype:str = 'INV' if any([b[0] for b in are_INV]) else 'NA'
-                        output_vcf_file.write(
-                            '\t'.join(
-                                [
-                                    *line.split('\t')[0:7],
-                                    'INVANNOT='+annot+';'+'INVCOV='+cov+';'+'SVTYPE='+svtype+';'+f_INFO.split(";BL=")[0],
-                                ] + line.split('\t')[8:] if len(line.split('\t'))>8 else []
-                            )
+                        # Run minimap2
+                        alnPAF: str = f"{temp_folder}{chrom}.{pos}.a{str(i+1)}.paf"
+                        run(
+                            f"minimap2 --cs -t --secondary=no -t {threads} {a0Fasta} {a1Fasta} 1> {alnPAF} 2> /dev/null ",
+                            shell=True,
                         )
 
-                        inversion_count += 1
+                        is_inv_fromAln, frac_rev, n_rev_aln, frac_for, n_for_aln = is_INV_fromAln(
+                            alnPAF)
+                        aln_coverage: float = .0
 
-                print("Inversion annotated bubbles: " + str(inversion_count))
-                with open(output_stats, "a") as stats:
-                    stats.write("\t".join(["Inversion_bubbles", str(inversion_count)]) + "\n")
-                    stats.write("\t".join(["Path-explicit", str(path_explicit_count)]) + "\n")
-                    stats.write("\t".join(["Alignment-rescued", str(aln_rescued_count)]) + "\n")
+                        if is_inv_fromAln:
+                            aln_coverage = float(frac_rev)
+
+                        if aln_coverage >= mincov:
+                            are_INV[i-1] = (True, "ALN", ",".join([str(aln_coverage), str(
+                                n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
+                            aln_rescued_count += 1
+                        else: #NOINV (insufficient signal)
+                            are_INV[i-1] = (False, "NOINV") 
+
+                for i in range(len(are_INV)):
+
+                    if are_INV[i] == None: #NA (not tested)
+                        are_INV[i] = (False, "NA")
+
+                # ---------------------------------------------------
+                # Output results
+                # ---------------------------------------------------
+                if any([b[0] for b in are_INV]):
+                    # As we can have multiple statuses for one inversion site, we concatenate them
+                    # We could also set rules to choose annot, cov and svtype values
+                    # We ignore the BL field in output
+                    annot:str = ','.join(b[1] for b in are_INV)
+                    cov:str = ','.join(b[2].split(',')[0] if b[0] else '.' for b in are_INV)
+                    svtype:str = 'INV' if any([b[0] for b in are_INV]) else 'NA'
+                    output_vcf_file.write(
+                        '\t'.join(
+                            [
+                                *line.split('\t')[0:7],
+                                'INVANNOT='+annot+';'+'INVCOV='+cov+';'+'SVTYPE='+svtype+';'+f_INFO.split(";BL=")[0],
+                            ] + line.split('\t')[8:] if len(line.split('\t'))>8 else []
+                        )
+                    )
+
+                    inversion_count += 1
+
+            print("Inversion annotated bubbles: " + str(inversion_count))
+            with open(output_stats, "a") as stats:
+                stats.write("\t".join(["Inversion_bubbles", str(inversion_count)]) + "\n")
+                stats.write("\t".join(["Path-explicit", str(path_explicit_count)]) + "\n")
+                stats.write("\t".join(["Alignment-rescued", str(aln_rescued_count)]) + "\n")
