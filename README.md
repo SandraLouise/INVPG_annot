@@ -52,8 +52,8 @@ To check that INVPG-annot behaves as expected on your device, you can run:
 
 ```bash
 cd test-dir/
-invpg -v test_bubbles.vcf -g test_graph.gfa -o test_annotation.bed -m 0.5 -d 10
-diff expected_annotation.bed test_annotation.bed
+invpg -v test_bubbles.vcf -g test_graph.gfa -o test_annotation.vcf -m 0.5 -d 10
+diff expected_annotation.vcf test_annotation.vcf
 ```
 
 To explore the intermediate output files (described [here](https://github.com/SandraLouise/INVPG_annot?tab=readme-ov-file#intermediate-files-when-using--k-parameter)) on a small dataset, run:
@@ -61,7 +61,7 @@ To explore the intermediate output files (described [here](https://github.com/Sa
 ```bash
 mkdir outputfiles
 cd outputfiles
-invpg -v ../test_bubbles.vcf -g ../test_graph.gfa -o test_annotation.bed -k -m 0.5 -d 10
+invpg -v ../test_bubbles.vcf -g ../test_graph.gfa -o test_annotation.vcf -k -m 0.5 -d 10
 cd res_*
 ```
 
@@ -74,13 +74,15 @@ The `-m` parameter sets the minimum coverage of inversion signal (as a fraction 
 
 ### Output files
 
-#### Final BED annotation file
+#### Final VCF annotation file
 
-By default, the `invpg` command outputs a single BED file in which each line describes a bubble annotated as inversion. The three first fields contain classical BED information (*i.e.* reference chromosome ID, start position, end position). The fourth field contains additionnal information about the annotation for each non-reference allele that passed the first step filter (separated by `;`) in the form "INV:`signaltype`:`cov`,`x`" or "DIV" (when the inversion signal was < `--mincov`). 
+By default, the `invpg` command outputs a single VCF file in which each line describes a bubble annotated as inversion. The three first fields contain `vg deconstruct`-like VCF information (*i.e.* reference chromosome ID, position, paths, alternates...). The INFO field contains additionnal information about the annotation for each non-reference allele that passed the first step filter (separated by `;`) with the following specification:
 
-- `signaltype` can be either "path" or "aln" depending on the source of the signal used for the annotation (path-based or alignment-based).
-- `cov` is the fraction of inversion signal coverage.
-- `x` corresponds to additionnal statistics that can be ignored (used for development that will soon be removed from the output).
+```text
+##INFO=<ID=INVANNOT,Number=A,Type=String,Description="Source of inversion annotation (PATH=path-explicit,ALN=alignment-rescued,NOINV=insufficient inversion signal,NA=not tested)">
+##INFO=<ID=INVCOV,Number=A,Type=Float,Description="Inversion signal coverage">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of SV">
+```
 
 #### Intermediate files (when using `-k` parameter)
 
