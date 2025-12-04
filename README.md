@@ -21,8 +21,9 @@ python -m pip install . --quiet
 > **Prerequisites:**
 > - `GFA` - A pangenome graph in GFA format.
 > - `VCF` - The bubbles extracted from the `.gfa` in VCF format. Note that INVPG-annot has only been tested on and developed based on the formats of VCFs produced by `vg deconstruct` or the [`minigraph-call` pipeline](https://github.com/lh3/minigraph?tab=readme-ov-file#sv-calling-showcase-human-mhc).
+> Please see [Commands](docs/pipeline.md) to learn more about how to prepare your files for invpg-annot.
 
-You can use a single command to execute the whole pipeline or do a step-by-step analysis (see below).
+You can use a single command to execute the whole pipeline or do a step-by-step analysis (see [Steps](docs/steps.md)).
 
 ```bash
 usage: invpg [-h] [-v INPUT_VCF_FILE] [-g INPUT_GFA_FILE] [-o OUTPUT_PREFIX] [-d DIV_PERCENTAGE] [-m MINCOV] [-k] [-t THREADS] [-O OUTPUT_VCF_FILE]
@@ -89,59 +90,6 @@ There are two types of intermediate files: one VCF file and multiple PAF files.
 
 - The VCF file (name ending with `.balancedSV.vcf`) contains all input VCF lines that pass the first step filter. It is the file used as input for the second step of annotation.
 - The PAF files contain the minimap2 alignment results for each allele going through the second step of annotation. The number of PAF files can be very large depending on the input VCF contents. We plan to optimize the number of PAF files generated in the future.
-
-## Running INVPG-annot step by step
-
-### 1. Selecting the bubbles to process
-
-Selects bubbles corresponding to putative balanced SVs.
-
-```bash
-usage: invpg filtvcf [-h] [-d DIV_PERCENTAGE] input_vcf_file
-
-positional arguments:
-  input_vcf_file        Path to a VCF file.
-
-options:
-  -h, --help            show this help message and exit
-  -d DIV_PERCENTAGE, --div_percentage DIV_PERCENTAGE
-                        Estimated percentage of genome divergence (for variants filtering).
-```
-
-- `input_vcf_file`  Unfiltered VCF.
-- `divPct`  Estimated percentage of divergence of the genomes in the pangenome graph. Defines the leniency to consider a variant as balanced.
-
-Output: 
-- `input_vcf_file`.balancedSV.vcf  A VCF file with selected bubbles.
-
-### 2. Annotating the selected bubbles
-
-> [!WARNING]\
-> **Requires minimap2.**
-
-Annotates the bubbles as "INV:path" or "INV:aln".
-
-```bash
-usage: invpg annot [-h] [-t THREADS] [-m MINCOV] input_vcf_file input_gfa_file
-
-positional arguments:
-  input_vcf_file        Path to a VCF file.
-  input_gfa_file        Path to a GFA-like file.
-
-options:
-  -h, --help            show this help message and exit
-  -t THREADS, --threads THREADS
-                        Number of threads used for parallelization (minimap2).
-  -m MINCOV, --mincov MINCOV
-                        Minimum coverage of inversion signal.
-```
-
-- `input_vcf_file`  Filtered VCF file.
-- `threads`  Number of threads to use for the sequence alignment (minimap2).
-- `mincov` Minimum coverage of inversion signal.
-
-Output:
-- `input_vcf_file`.annot.tsv  A TSV (tabular separated) file with INV annotated bubbles, one bubble per line.
 
 ## Citation
 
