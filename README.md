@@ -56,12 +56,12 @@ invpg -v test_bubbles.vcf -g test_graph.gfa -o test_annotation.vcf -m 0.5 -d 10
 diff expected_annotation.vcf test_annotation.vcf
 ```
 
-To explore the intermediate output files (described [here](https://github.com/SandraLouise/INVPG_annot?tab=readme-ov-file#intermediate-files-when-using--k-parameter)) on a small dataset, run:
+To explore the intermediate output files (described [here](https://github.com/SandraLouise/INVPG_annot?tab=readme-ov-file#intermediate-files-when-using--k-parameter)) on a small dataset, run (with option `-k`):
 
 ```bash
 mkdir outputfiles
 cd outputfiles
-invpg -v ../test_bubbles.vcf -g ../test_graph.gfa -o test_annotation.vcf -k -m 0.5 -d 10
+invpg -v ../test-dir/test_bubbles.vcf -g ../test-dir/test_graph.gfa -o test_annotation.vcf -k -m 0.5 -d 10
 cd res_*
 ```
 
