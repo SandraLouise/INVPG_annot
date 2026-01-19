@@ -76,13 +76,17 @@ The `-m` parameter sets the minimum coverage of inversion signal (as a fraction 
 
 #### Final VCF annotation file
 
-By default, the `invpg` command outputs a single VCF file in which each line describes a bubble annotated as inversion. The three first fields contain `vg deconstruct`-like VCF information (*i.e.* reference chromosome ID, position, paths, alternates...). The INFO field contains additionnal information about the annotation for each non-reference allele that passed the first step filter (separated by `;`) with the following specification:
+The main output file of the `invpg` command is a VCF file in which each line describes a bubble annotated as inversion. The three first fields contain `vg deconstruct`-like VCF information (*i.e.* reference chromosome ID, position, paths, alternates...). The INFO field contains additionnal information about the annotation for each non-reference allele that passed the first step filter (separated by `;`) with the following specification:
 
 ```text
 ##INFO=<ID=INVANNOT,Number=A,Type=String,Description="Source of inversion annotation (PATH=path-explicit,ALN=alignment-rescued,NOINV=insufficient inversion signal,NA=not tested)">
 ##INFO=<ID=INVCOV,Number=A,Type=Float,Description="Inversion signal coverage">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of SV">
 ```
+
+#### Text file with inversion bubbles statistics
+
+`invpg` also outputs a text file, name ending with `.stats`, which summarizes the bubble annotation statistics at each step of the program. It contains the number of input bubbles, balanced bubbles, and annotated inversion bubbles. It also indicates the total numbers of path-explicit and alignment-rescued topologies, as numbers of paths (one bubble can have alternative several paths, each with an annotation).
 
 #### Intermediate files (when using `-k` parameter)
 
