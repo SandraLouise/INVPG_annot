@@ -206,7 +206,8 @@ def main() -> None:
                 output_prefix=args.output_prefix,
                 timestamp=timestamp,
             )
-            print(f"Results output in {temp_output_vcf}")
+            if args.keep_files:
+                print(f"Selected bubbles output in {temp_output_vcf}")
             # Then we rescue nodes in inversions that weren't described in the VCF
             print("[" + str(datetime.now()) +
                   "] STEP 2: rescuing nodes in inversions"
@@ -220,7 +221,7 @@ def main() -> None:
                 threads=args.threads,
             )
             print("[" + str(datetime.now()) + "] DONE!")
-            
+            print(f"Results output in files {args.output_prefix}.vcf and {args.output_prefix}.stats")
             if not args.keep_files:
                 if '/' not in args.output_prefix:
                     temp_folder = f'./res_{timestamp}/'
