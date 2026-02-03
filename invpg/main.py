@@ -201,6 +201,9 @@ def main() -> None:
                 timestamp=timestamp,
             )
         case _:
+            # We check if both -v and -g are given
+            if not args.input_vcf_file or not args.input_gfa_file:
+                raise RuntimeError('Both -v (input vcf file) and -g (input gfa file) must be given when using global command.')
             # First we filter the VCF file
             print("[" + str(datetime.now()) + "] STEP 1: filtering VCF file")
             temp_output_vcf: str = variant_filter(
