@@ -24,7 +24,7 @@ from pathlib import Path
 from argparse import ArgumentParser
 from sys import argv
 from os import listdir, remove
-from shutil import rmtree
+from shutil import rmtree, which
 from datetime import datetime
 from invpg.inv_annot import invannot
 from invpg.variant_filter import variant_filter
@@ -179,6 +179,9 @@ def main() -> None:
     ts = datetime.now()
     print(f"Starting job @{str(ts)}")
     timestamp: str = str(ts).replace(' ', '_').replace(':', '')
+
+    if not which('minimap2'):
+        raise RuntimeError('Minimap2 is not installed or not in path.')
 
     match args.subcommands:
         case 'annot':
