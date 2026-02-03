@@ -4,7 +4,7 @@ SOFT_DESCRIPTION: str = "A tool to annotate inversions from pangenome graph bubb
 HELP_COMMAND_INVANNOT: str = "Annotates the bubbles as \"INV:path\" or \"INV:aln\"."
 HELP_COMMAND_FILTERVCF: str = "Selects bubbles corresponding to putative balanced SVs."
 # Input help strings
-HELP_INPUT_FILE_GFA: str = "Path to the graph file (in GFA format).  Should be provided solely when not using minigraph graphs."
+HELP_INPUT_FILE_GFA: str = "Path to the graph file (in GFA format)."
 HELP_INPUT_FILE_VCF: str = "Path to the bubble file (in VCF format)."
 # Parameters help strings
 HELP_PARAM_THREADS: str = "Number of threads used for parallelization (minimap2)."
