@@ -24,7 +24,7 @@ from pathlib import Path
 from argparse import ArgumentParser
 from sys import argv
 from os import listdir, remove
-from shutil import rmtree
+from shutil import rmtree, which
 from datetime import datetime
 from invpg.inv_annot import invannot
 from invpg.variant_filter import variant_filter
@@ -180,16 +180,18 @@ def main() -> None:
     print(f"Starting job @{str(ts)}")
     timestamp: str = str(ts).replace(' ', '_').replace(':', '')
 
+    if not which('minimap2'):
+        raise RuntimeError('Minimap2 is not installed or not in path.')
+
     match args.subcommands:
         case 'annot':
             invannot(
                 gfa_file=args.input_gfa_file,
                 vcf_file=args.input_vcf_file,
-                # temp_folder=f"tmp_{Path(args.gfa_file).stem}/",
-                mincov=args.mincov,
-                threads=args.threads,
                 output_prefix=args.output_prefix,
                 timestamp=timestamp,
+                mincov=args.mincov,
+                threads=args.threads,
             )
         case 'filtvcf':
             filter(
@@ -199,6 +201,9 @@ def main() -> None:
                 timestamp=timestamp,
             )
         case _:
+            # We check if both -v and -g are given
+            if not args.input_vcf_file or not args.input_gfa_file:
+                raise RuntimeError('Both -v (input vcf file) and -g (input gfa file) must be given when using global command.')
             # First we filter the VCF file
             print("[" + str(datetime.now()) + "] STEP 1: filtering VCF file")
             temp_output_vcf: str = variant_filter(
@@ -207,7 +212,8 @@ def main() -> None:
                 output_prefix=args.output_prefix,
                 timestamp=timestamp,
             )
-            print(f"Results output in {temp_output_vcf}")
+            if args.keep_files:
+                print(f"Selected bubbles output in {temp_output_vcf}")
             # Then we rescue nodes in inversions that weren't described in the VCF
             print("[" + str(datetime.now()) +
                   "] STEP 2: rescuing nodes in inversions"
@@ -221,7 +227,7 @@ def main() -> None:
                 threads=args.threads,
             )
             print("[" + str(datetime.now()) + "] DONE!")
-            
+            print(f"Results output in files {args.output_prefix}.vcf and {args.output_prefix}.stats")
             if not args.keep_files:
                 if '/' not in args.output_prefix:
                     temp_folder = f'./res_{timestamp}/'

@@ -21,33 +21,29 @@ python -m pip install . --quiet
 > **Prerequisites:**
 > - `GFA` - A pangenome graph in GFA format.
 > - `VCF` - The bubbles extracted from the `.gfa` in VCF format. Note that INVPG-annot has only been tested on and developed based on the formats of VCFs produced by `vg deconstruct` or the [`minigraph-call` pipeline](https://github.com/lh3/minigraph?tab=readme-ov-file#sv-calling-showcase-human-mhc).
+> Please see [Commands](docs/pipeline.md) to learn more about how to prepare your files for invpg-annot.
 
-You can use a single command to execute the whole pipeline or do a step-by-step analysis (see below).
+You can use a single command to execute the whole pipeline or do a step-by-step analysis (see [Steps](docs/steps.md)).
 
-```bash
-usage: invpg [-h] -v INPUT_VCF_FILE -g INPUT_GFA_FILE [-o OUTPUT_PREFIX] [-d DIV_PERCENTAGE] [-m MINCOV] [-k] [-t THREADS]
+```text
+usage: invpg [-h] [-v INPUT_VCF_FILE] [-g INPUT_GFA_FILE] [-o OUTPUT_PREFIX] [-d DIV_PERCENTAGE] [-m MINCOV] [-k] [-t THREADS] [-O OUTPUT_VCF_FILE]
 
 A tool to annotate inversions from pangenome graph bubbles.
   -h, --help            show this help message and exit
-  -v  --input_vcf_file INPUT_VCF_FILE
+  -v, --input_vcf_file INPUT_VCF_FILE
                         Path to a VCF file.
-  -g  --input_gfa_file INPUT_GFA_FILE
-                        Path to a GFA-like file.
+  -g, --input_gfa_file INPUT_GFA_FILE
+                        Path to a GFA-like file. Should be provided solely when not using minigraph graphs.
   -o, --output_prefix OUTPUT_PREFIX
-                        Name of output BED file (without file extension). Can be a path to 
-                        control output directory.
-  -d  --div_percentage DIV_PERCENTAGE 
-                        This parameter controls the leniency of the algorithm towards allele 
-                        size difference (in nt) in the first step of variant/bubble filtering.
-                        Only the non-reference alleles that have a size difference <= d% will 
-                        go through the annotation step. (default: 10)
-  -m  --mincov MINCOV
-                        Minimum coverage of inversion signal as fraction of bubble length. 
-                        (default: 0.5)
-  -k, --keep_files      Keep temporary files after pipeline completion (mostly for debugging 
-                        purposes).
-  -t  --threads THREADS
-                        Number of threads used for parallelization (only for minimap2).
+                        Name/path of output VCF file. If parent folder of output VCF file doesn't already exist, it will be created.
+  -d, --div_percentage DIV_PERCENTAGE
+                        This parameter controls the leniency of the algorithm towards allele size difference (in nt) in the first step of variant/bubble
+                        filtering. Only the non-reference alleles that have a size difference <= (d * max allele size / 100) will go through the annotation
+                        step. (default: 10)
+  -m, --mincov MINCOV   Minimum coverage of inversion signal as fraction of bubble length. (default: 0.5)
+  -k, --keep_files      Keep temporary files after pipeline completion (mostly for debugging purposes).
+  -t, --threads THREADS
+                        Number of threads used for parallelization (minimap2).
 ```
 
 ### Test with a small dataset
@@ -56,16 +52,16 @@ To check that INVPG-annot behaves as expected on your device, you can run:
 
 ```bash
 cd test-dir/
-invpg -v test_bubbles.vcf -g test_graph.gfa -o test_annotation.bed -m 0.5 -d 10
-diff expected_annotation.bed test_annotation.bed
+invpg -v test_bubbles.vcf -g test_graph.gfa -o test_annotation.vcf -m 0.5 -d 10
+diff expected_annotation.vcf test_annotation.vcf
 ```
 
-To explore the intermediate output files (described [here](https://github.com/SandraLouise/INVPG_annot?tab=readme-ov-file#intermediate-files-when-using--k-parameter)) on a small dataset, run:
+To explore the intermediate output files (described [here](https://github.com/SandraLouise/INVPG_annot?tab=readme-ov-file#intermediate-files-when-using--k-parameter)) on a small dataset, run (with option `-k`):
 
 ```bash
 mkdir outputfiles
 cd outputfiles
-invpg -v ../test_bubbles.vcf -g ../test_graph.gfa -o test_annotation.bed -k -m 0.5 -d 10
+invpg -v ../test-dir/test_bubbles.vcf -g ../test-dir/test_graph.gfa -o test_annotation.vcf -k -m 0.5 -d 10
 cd res_*
 ```
 
@@ -78,13 +74,19 @@ The `-m` parameter sets the minimum coverage of inversion signal (as a fraction 
 
 ### Output files
 
-#### Final BED annotation file
+#### Final VCF annotation file
 
-By default, the `invpg` command outputs a single BED file in which each line describes a bubble annotated as inversion. The three first fields contain classical BED information (*i.e.* reference chromosome ID, start position, end position). The fourth field contains additionnal information about the annotation for each non-reference allele that passed the first step filter (separated by `;`) in the form "INV:`signaltype`:`cov`,`x`" or "DIV" (when the inversion signal was < `--mincov`). 
+The main output file of the `invpg` command is a VCF file in which each line describes a bubble annotated as inversion. The three first fields contain `vg deconstruct`-like VCF information (*i.e.* reference chromosome ID, position, paths, alternates...). The INFO field contains additionnal information about the annotation for each non-reference allele that passed the first step filter (separated by `;`) with the following specification:
 
-- `signaltype` can be either "path" or "aln" depending on the source of the signal used for the annotation (path-based or alignment-based).
-- `cov` is the fraction of inversion signal coverage.
-- `x` corresponds to additionnal statistics that can be ignored (used for development that will soon be removed from the output).
+```text
+##INFO=<ID=INVANNOT,Number=A,Type=String,Description="Source of inversion annotation (PATH=path-explicit,ALN=alignment-rescued,NOINV=insufficient inversion signal,NA=not tested)">
+##INFO=<ID=INVCOV,Number=A,Type=Float,Description="Inversion signal coverage">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of SV">
+```
+
+#### Text file with inversion bubbles statistics
+
+`invpg` also outputs a text file, name ending with `.stats`, which summarizes the bubble annotation statistics at each step of the program. It contains the number of input bubbles, balanced bubbles, and annotated inversion bubbles. It also indicates the total numbers of path-explicit and alignment-rescued topologies, as numbers of paths (one bubble can have alternative several paths, each with an annotation).
 
 #### Intermediate files (when using `-k` parameter)
 
@@ -92,59 +94,6 @@ There are two types of intermediate files: one VCF file and multiple PAF files.
 
 - The VCF file (name ending with `.balancedSV.vcf`) contains all input VCF lines that pass the first step filter. It is the file used as input for the second step of annotation.
 - The PAF files contain the minimap2 alignment results for each allele going through the second step of annotation. The number of PAF files can be very large depending on the input VCF contents. We plan to optimize the number of PAF files generated in the future.
-
-## Running INVPG-annot step by step
-
-### 1. Selecting the bubbles to process
-
-Selects bubbles corresponding to putative balanced SVs.
-
-```bash
-usage: invpg filtvcf [-h] [-d DIV_PERCENTAGE] input_vcf_file
-
-positional arguments:
-  input_vcf_file        Path to a VCF file.
-
-options:
-  -h, --help            show this help message and exit
-  -d DIV_PERCENTAGE, --div_percentage DIV_PERCENTAGE
-                        Estimated percentage of genome divergence (for variants filtering).
-```
-
-- `input_vcf_file`  Unfiltered VCF.
-- `divPct`  Estimated percentage of divergence of the genomes in the pangenome graph. Defines the leniency to consider a variant as balanced.
-
-Output: 
-- `input_vcf_file`.balancedSV.vcf  A VCF file with selected bubbles.
-
-### 2. Annotating the selected bubbles
-
-> [!WARNING]\
-> **Requires minimap2.**
-
-Annotates the bubbles as "INV:path" or "INV:aln".
-
-```bash
-usage: invpg annot [-h] [-t THREADS] [-m MINCOV] input_vcf_file input_gfa_file
-
-positional arguments:
-  input_vcf_file        Path to a VCF file.
-  input_gfa_file        Path to a GFA-like file.
-
-options:
-  -h, --help            show this help message and exit
-  -t THREADS, --threads THREADS
-                        Number of threads used for parallelization (minimap2).
-  -m MINCOV, --mincov MINCOV
-                        Minimum coverage of inversion signal.
-```
-
-- `input_vcf_file`  Filtered VCF file.
-- `threads`  Number of threads to use for the sequence alignment (minimap2).
-- `mincov` Minimum coverage of inversion signal.
-
-Output:
-- `input_vcf_file`.annot.tsv  A TSV (tabular separated) file with INV annotated bubbles, one bubble per line.
 
 ## Citation
 

@@ -215,7 +215,7 @@ def variant_filter(
     temp_folder = f"{output_folder}res_{timestamp}/"
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
-    output_stats = output_prefix.replace(".bed", "") + ".stats"
+    output_stats = output_prefix.replace(".vcf", "") + ".stats"
 
     with open(outVCF := f"{temp_folder}balanced_svs.vcf", 'w', encoding='utf-8') as out_vcf_balanced:
         with open(in_vcf, 'r', encoding='utf-8') as file:

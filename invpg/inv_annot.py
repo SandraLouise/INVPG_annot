@@ -344,7 +344,7 @@ def invannot(
     mincov: float,
     threads: int,
 ) -> None:
-    """Loops over all the bed lines, iterating to analyse and recover inversions.
+    """Loops over all the vcf lines, iterating to analyse and recover inversions.
 
     Parameters
     ----------
@@ -352,8 +352,10 @@ def invannot(
         Path to a valid GFA file
     vcf_file : str
         Path to a valid VCF file
+    out_vcf : str
+        Path to a .vcf output file
     output_prefix : str
-        Path to a .bed output file
+        Path to a .vcf output file
     mincov : float
         Minimum coverage
     threads : int
@@ -366,10 +368,10 @@ def invannot(
                 d_nodes = index_node_seq(d_nodes, line)
 
     # Defining output path
-    if not output_prefix.endswith('.bed'):
-        output_bed_file = output_prefix + '.bed'
+    if not output_prefix.endswith('.vcf'):
+        output_vcf_file = output_prefix + '.vcf'
     else:
-        output_bed_file = output_prefix
+        output_vcf_file = output_prefix
 
     # Managing output folders
     if '/' not in output_prefix:
@@ -384,16 +386,26 @@ def invannot(
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
     # Annotation statistics
-    output_stats = output_prefix.replace(".bed", "") + ".stats"
+    output_stats = output_prefix.replace(".vcf", "") + ".stats"
     inversion_count: int = 0
     path_explicit_count: int = 0
     aln_rescued_count: int = 0
 
-    with open(output_bed_file, 'w', encoding='utf-8') as output_bed_file:
+    with open(output_vcf_file, 'w', encoding='utf-8') as output_vcf_file:
         with open(vcf_file, 'r', encoding='utf-8') as input_vcf_file:
+            comment_lines:int = 0
             for line in input_vcf_file:
 
+                # ---------------------------------------------------
+                # Write comments in output VCF file
+                # ---------------------------------------------------
                 if line[0] == "#":
+                    comment_lines += 1
+                    output_vcf_file.write(line.strip()+'\n')
+                    if comment_lines == 2:
+                        output_vcf_file.write("##INFO=<ID=INVANNOT,Number=A,Type=String,Description=\"Source of inversion annotation (PATH=path-explicit,ALN=alignment-rescued,NOINV=insufficient inversion signal,NA=not tested)\">"+'\n')
+                        output_vcf_file.write("##INFO=<ID=INVCOV,Number=A,Type=Float,Description=\"Inversion signal coverage\">"+'\n')
+                        output_vcf_file.write("##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of SV\">"+'\n')
                     continue
 
                 # ---------------------------------------------------
@@ -450,7 +462,7 @@ def invannot(
                         path_coverage: float = float(len_rev)/float(len(a0Seq))
 
                     if path_coverage >= mincov:
-                        are_INV[i-1] = (True, "path", ",".join([str(path_coverage),
+                        are_INV[i-1] = (True, "PATH", ",".join([str(path_coverage),
                                         str(len(rev_nodes))]), str(len(a1Walk)-len(rev_nodes)))
                         path_explicit_count += 1
 
@@ -480,32 +492,34 @@ def invannot(
                             aln_coverage = float(frac_rev)
 
                         if aln_coverage >= mincov:
-                            are_INV[i-1] = (True, "aln", ",".join([str(aln_coverage), str(
+                            are_INV[i-1] = (True, "ALN", ",".join([str(aln_coverage), str(
                                 n_rev_aln)]), ",".join([str(round(frac_for, 2)), str(n_for_aln)]))
                             aln_rescued_count += 1
-                        else:
-                            are_INV[i-1] = (False, ".")
+                        else: #NOINV (insufficient signal)
+                            are_INV[i-1] = (False, "NOINV") 
 
                 for i in range(len(are_INV)):
 
-                    if are_INV[i] == None:
-                        are_INV[i] = (False, ".")
+                    if are_INV[i] == None: #NA (not tested)
+                        are_INV[i] = (False, "NA")
 
                 # ---------------------------------------------------
                 # Output results
                 # ---------------------------------------------------
                 if any([b[0] for b in are_INV]):
-                    output_bed_file.write(
-                        "\t".join([
-                            chrom,
-                            pos,
-                            str(int(pos) + len(a0Seq) - 1),
-                            ";".join(
-                                [
-                                    "INV:" + ":".join(b[1:]) if b[0] else "DIV" for b in are_INV
-                                ]
-                            )
-                        ]) + "\n"
+                    # As we can have multiple statuses for one inversion site, we concatenate them
+                    # We could also set rules to choose annot, cov and svtype values
+                    # We ignore the BL field in output
+                    annot:str = ','.join(b[1] for b in are_INV)
+                    cov:str = ','.join(str(round(float(b[2].split(',')[0]),2)) if b[0] else '.' for b in are_INV)
+                    svtype:str = 'INV' if any([b[0] for b in are_INV]) else 'NA'
+                    output_vcf_file.write(
+                        '\t'.join(
+                            [
+                                *line.split('\t')[0:7],
+                                'INVANNOT='+annot+';'+'INVCOV='+cov+';'+'SVTYPE='+svtype+';'+f_INFO.split(";BL=")[0],
+                            ] + line.split('\t')[8:] if len(line.split('\t'))>8 else []
+                        )
                     )
 
                     inversion_count += 1
