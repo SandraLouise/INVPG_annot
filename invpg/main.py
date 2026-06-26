@@ -20,10 +20,9 @@
 *******************************************************************************"""
 
 from invpg.__constants__ import *
-from pathlib import Path
 from argparse import ArgumentParser
 from sys import argv
-from os import listdir, remove
+from os import path
 from shutil import rmtree, which
 from datetime import datetime
 from invpg.inv_annot import invannot
@@ -227,7 +226,7 @@ def main() -> None:
                 threads=args.threads,
             )
             print("[" + str(datetime.now()) + "] DONE!")
-            print(f"Results output in files {args.output_prefix}.vcf and {args.output_prefix}.stats")
+            print(f"Results output in files {path.splitext(args.output_prefix)[0]}.vcf and {path.splitext(args.output_prefix)[0]}.stats")
             if not args.keep_files:
                 if '/' not in args.output_prefix:
                     temp_folder = f'./res_{timestamp}/'
